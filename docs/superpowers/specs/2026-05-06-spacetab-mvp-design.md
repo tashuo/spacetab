@@ -77,7 +77,7 @@ const SpaceSchema = z.object({
 
 const DatabaseSchema = z.object({
   version: z.literal(1),
-  spaces: z.array(SpaceSchema), // 顺序 = UI 显示顺序
+  spaces: z.array(SpaceSchema), // 持久顺序;P0 UI 显示按 updatedAt 降序排,不读这里
 });
 ```
 
@@ -111,10 +111,17 @@ snapshotFocusedWindow(): Promise<Result<Tab[]>>
   // 过滤 chrome:// 等不可重开的 url
 
 closeFocusedWindowTabs(): Promise<Result<void>>
-  // 仅关闭当前窗口非 pinned 标签;若关空了浏览器,需保证至少留一个 about:blank
+  // 仅关闭当前窗口非 pinned 标签。
+  // 边角:Chrome 在窗口仅剩 0 个非 pinned 标签时会关掉整个窗口。
+  //   若窗口同时也没有 pinned 标签,先 create 一个 about:blank 占位,再关旧的。
 
 openTabsInFocusedWindow(tabs: Tab[]): Promise<Result<{ failed: Tab[] }>>
-  // 单条失败不阻塞,收集到 failed 返回
+  // 单条失败不阻塞,收集到 failed 返回。
+
+replaceFocusedWindowTabs(tabs: Tab[]): Promise<Result<{ failed: Tab[] }>>
+  // 切换专用:先 create 新 tabs,再关旧的非 pinned 标签。
+  // 这样保证窗口在中间态始终有标签,避免被 Chrome 关掉。
+  // 切换路径调它,而不是 close+open 的两步组合。
 ```
 
 **焦点窗口的判定**:用 `chrome.windows.getCurrent()` 取当前 popup 所在窗口的 id,后续 `tabs.query/create` 用 `windowId`。这避免"用户点开 popup 后切到别的窗口"的误操作。
@@ -141,7 +148,7 @@ openTabsInFocusedWindow(tabs: Tab[]): Promise<Result<{ failed: Tab[] }>>
    - 选已有 X:`snapshotFocusedWindow → space.appendTabs(X, snapshot, now) → storage.write → closeFocusedWindowTabs`。
    - 新建:输入名称 → `space.createSpace + appendTabs` → 同上。
    - 完成后 `window.close()` 关闭 popup。
-2. **切换** `[→]`:`closeFocusedWindowTabs → openTabsInFocusedWindow(space.tabs)`。无确认弹窗。
+2. **切换** `[→]`:`replaceFocusedWindowTabs(space.tabs)`(create 新 → 关旧,不留中间空窗状态)。无确认弹窗。
 3. **重命名** `[✎]`:行内 input → Enter 提交 / Esc 取消;空名禁止。
 4. **删除** `[🗑]`:`window.confirm("删除空间「X」?其中 N 个标签会一起丢")` → 确认后 `space.deleteSpace`。
 
