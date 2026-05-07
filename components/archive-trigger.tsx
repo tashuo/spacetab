@@ -7,9 +7,18 @@ interface Props {
   spaces: Space[]
   onArchiveExisting: (spaceId: string) => void
   onArchiveNew: (name: string) => void
+  /** 紧凑样式:窄列环境(如左侧栏)用,文案缩短并 flex-1 自适应 */
+  compact?: boolean
+  disabled?: boolean
 }
 
-export function ArchiveTrigger({ spaces, onArchiveExisting, onArchiveNew }: Props) {
+export function ArchiveTrigger({
+  spaces,
+  onArchiveExisting,
+  onArchiveNew,
+  compact = false,
+  disabled = false,
+}: Props) {
   const { t } = useT()
   const [open, setOpen] = useState(false)
   const [creating, setCreating] = useState(false)
@@ -33,14 +42,20 @@ export function ArchiveTrigger({ spaces, onArchiveExisting, onArchiveNew }: Prop
     setName('')
   }
 
+  const triggerClass = compact
+    ? 'flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded-md bg-slate-900 text-white hover:bg-slate-800 disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed transition-colors'
+    : 'bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium px-3.5 py-2 rounded-lg shadow-sm flex items-center gap-1.5 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors'
+
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className={compact ? 'relative flex-1' : 'relative'}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium px-3.5 py-2 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors"
+        disabled={disabled}
+        className={triggerClass}
+        title={t('archiveCurrentWindow')}
       >
-        <Plus className="w-4 h-4" />
-        {t('archiveCurrentWindow')}
+        <Plus className={compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
+        <span className="truncate">{t('archiveCurrentWindow')}</span>
       </button>
       {open && (
         <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">

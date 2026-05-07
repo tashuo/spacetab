@@ -172,15 +172,16 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-900">
-      <TopBar
-        spaces={db.spaces}
-        onArchiveExisting={archiveExisting}
-        onArchiveNew={archiveNewName}
-        onSmartArchive={handleSmartArchive}
-      />
+      <TopBar spaces={db.spaces} />
       <main className="max-w-6xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
         <aside className="lg:col-span-4 lg:sticky lg:top-20 lg:self-start">
-          <LiveTabsPanel spaces={db.spaces} onMoveToSpace={handleLiveTabMove} />
+          <LiveTabsPanel
+            spaces={db.spaces}
+            onMoveToSpace={handleLiveTabMove}
+            onSmartArchive={handleSmartArchive}
+            onArchiveExisting={archiveExisting}
+            onArchiveNew={archiveNewName}
+          />
         </aside>
         <section className="lg:col-span-8">
           <div className="mb-3 px-1 flex items-baseline justify-between">

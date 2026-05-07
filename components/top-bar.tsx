@@ -1,14 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
-import { ArchiveTrigger } from './archive-trigger'
-import { Layers, Globe, Sparkle } from './icons'
+import { Layers, Globe } from './icons'
 import { useT, LANGS, LANG_LABELS } from '@/lib/i18n'
 import type { Space } from '@/lib/schema'
 
 interface Props {
   spaces: Space[]
-  onArchiveExisting: (spaceId: string) => void
-  onArchiveNew: (name: string) => void
-  onSmartArchive?: () => void
 }
 
 function LanguageSwitcher() {
@@ -57,7 +53,7 @@ function LanguageSwitcher() {
   )
 }
 
-export function TopBar({ spaces, onArchiveExisting, onArchiveNew, onSmartArchive }: Props) {
+export function TopBar({ spaces }: Props) {
   const { t } = useT()
 
   return (
@@ -74,21 +70,6 @@ export function TopBar({ spaces, onArchiveExisting, onArchiveNew, onSmartArchive
         </div>
         <div className="flex items-center gap-2">
           <LanguageSwitcher />
-          {onSmartArchive && (
-            <button
-              onClick={onSmartArchive}
-              className="group flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-gradient-to-br from-indigo-50 to-violet-50 text-violet-700 border border-violet-200/70 hover:from-indigo-100 hover:to-violet-100 hover:border-violet-300 transition-colors"
-              title={t('smartArchive')}
-            >
-              <Sparkle className="w-3.5 h-3.5 text-violet-600 group-hover:text-violet-700 transition-colors" />
-              <span>{t('smartArchive')}</span>
-            </button>
-          )}
-          <ArchiveTrigger
-            spaces={spaces}
-            onArchiveExisting={onArchiveExisting}
-            onArchiveNew={onArchiveNew}
-          />
         </div>
       </div>
     </header>

@@ -4,32 +4,64 @@ import type { Space } from '@/lib/schema'
 import { useT } from '@/lib/i18n'
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Pin, X, ArrowRight } from './icons'
+import { Pin, X, ArrowRight, Sparkle } from './icons'
+import { ArchiveTrigger } from './archive-trigger'
 
 interface PanelProps {
   spaces: Space[]
   onMoveToSpace: (tabId: number, spaceId: string) => void
+  onSmartArchive: () => void
+  onArchiveExisting: (spaceId: string) => void
+  onArchiveNew: (name: string) => void
 }
 
-export function LiveTabsPanel({ spaces, onMoveToSpace }: PanelProps) {
+export function LiveTabsPanel({
+  spaces,
+  onMoveToSpace,
+  onSmartArchive,
+  onArchiveExisting,
+  onArchiveNew,
+}: PanelProps) {
   const { t } = useT()
   const tabs = useLiveTabs()
+  const hasTabs = tabs.length > 0
+
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-visible">
-      <div className="px-4 py-3 border-b border-slate-100 flex items-baseline justify-between">
-        <h2 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-          {t('currentWindow')}
-        </h2>
-        <span className="text-[11px] font-mono text-slate-400">{tabs.length}</span>
+      <div className="px-4 pt-3 pb-2 border-b border-slate-100">
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            {t('currentWindow')}
+          </h2>
+          <span className="text-[11px] font-mono text-slate-400">{tabs.length}</span>
+        </div>
+        <div className="mt-2 flex gap-1.5">
+          <button
+            onClick={onSmartArchive}
+            disabled={!hasTabs}
+            className="group flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded-md bg-gradient-to-br from-indigo-50 to-violet-50 text-violet-700 border border-violet-200/70 hover:from-indigo-100 hover:to-violet-100 hover:border-violet-300 disabled:from-slate-50 disabled:to-slate-50 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed transition-colors"
+            title={t('smartArchive')}
+          >
+            <Sparkle className="w-3.5 h-3.5 text-violet-600 group-hover:text-violet-700 group-disabled:text-slate-400 transition-colors" />
+            <span className="truncate">{t('smartArchive')}</span>
+          </button>
+          <ArchiveTrigger
+            spaces={spaces}
+            onArchiveExisting={onArchiveExisting}
+            onArchiveNew={onArchiveNew}
+            compact
+            disabled={!hasTabs}
+          />
+        </div>
       </div>
-      {tabs.length === 0 ? (
-        <div className="px-4 py-8 text-center text-xs text-slate-400">{t('emptyLiveTabs')}</div>
-      ) : (
-        <ul className="max-h-[calc(100vh-160px)] overflow-y-auto">
+      {hasTabs ? (
+        <ul className="max-h-[calc(100vh-200px)] overflow-y-auto">
           {tabs.map((tab) => (
             <LiveTabRow key={tab.id} tab={tab} spaces={spaces} onMoveToSpace={onMoveToSpace} />
           ))}
         </ul>
+      ) : (
+        <div className="px-4 py-8 text-center text-xs text-slate-400">{t('emptyLiveTabs')}</div>
       )}
     </div>
   )
