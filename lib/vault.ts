@@ -70,49 +70,28 @@ export async function archiveCurrentWindowToSpace(
   const visible = await chrome.tabs.query({ windowId: focusedId, pinned: false })
 
   const archived: Tab[] = []
-  const tabIdsToVault: number[] = []
-  const idsToClose: number[] = []
+  const tabIdsToTag: number[] = []
   for (const t of visible) {
     if (isSelfExtension(t.url)) continue
     if (typeof t.id !== 'number') continue
-    if (!canRestore(t.url)) {
-      idsToClose.push(t.id)
-      continue
-    }
+    if (!canRestore(t.url)) continue // chrome:// 等不归档,但也不关
     const url = t.url!
     archived.push({
       url,
       title: t.title && t.title.length > 0 ? t.title : url,
       ...(t.favIconUrl ? { favIconUrl: t.favIconUrl } : {}),
     })
-    tabIdsToVault.push(t.id)
+    tabIdsToTag.push(t.id)
   }
 
-  if (tabIdsToVault.length > 0) {
-    const vaultId = await ensureVaultWindow()
-    try {
-      await chrome.tabs.move(tabIdsToVault, { windowId: vaultId, index: -1 })
-      const state = await readSessionState()
-      await writeSessionState(tagTabIdsForSpace(state, spaceId, tabIdsToVault))
-    } catch {
-      // 如果 move 失败(比如 vault 没了),把这些标签关掉作为兜底
-      try {
-        await chrome.tabs.remove(tabIdsToVault)
-      } catch {
-        // ignore
-      }
-    }
+  // 仅给当前窗口的标签打标,不搬走、不关闭——保持用户视野。
+  // 下次切换到别的空间时,switchToSpace 会把这些 tagged 标签自然地搬入 vault。
+  if (tabIdsToTag.length > 0) {
+    const state = await readSessionState()
+    await writeSessionState(tagTabIdsForSpace(state, spaceId, tabIdsToTag))
   }
 
-  if (idsToClose.length > 0) {
-    try {
-      await chrome.tabs.remove(idsToClose)
-    } catch {
-      // ignore
-    }
-  }
-
-  return { archived, closedNonRestorable: idsToClose.length }
+  return { archived, closedNonRestorable: 0 }
 }
 
 export async function switchToSpace(

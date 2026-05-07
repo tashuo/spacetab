@@ -92,7 +92,7 @@ describe('ensureVaultWindow', () => {
 // archiveCurrentWindowToSpace
 // ---------------------------------------------------------------------------
 describe('archiveCurrentWindowToSpace', () => {
-  it('moves http/https tabs to vault and returns them as archived', async () => {
+  it('returns archived snapshot and keeps the tabs in the focused window', async () => {
     await seedFocusedWindow([
       { url: 'https://a.com/' },
       { url: 'https://b.com/' },
@@ -104,14 +104,14 @@ describe('archiveCurrentWindowToSpace', () => {
     expect(archived.map((t) => t.url).sort()).toEqual(['https://a.com/', 'https://b.com/'])
     expect(closedNonRestorable).toBe(0)
 
-    // Tabs should now be in vault (not in focused window)
+    // 标签仍留在焦点窗口(归档不再搬走)
     const focusedTabs = await fakeBrowser.tabs.query({ windowId: FOCUSED_WIN })
     const focusedUrls = focusedTabs.map((t: chrome.tabs.Tab) => t.url)
-    expect(focusedUrls).not.toContain('https://a.com/')
-    expect(focusedUrls).not.toContain('https://b.com/')
+    expect(focusedUrls).toContain('https://a.com/')
+    expect(focusedUrls).toContain('https://b.com/')
   })
 
-  it('tags moved tab IDs under the spaceId in session state', async () => {
+  it('tags archived tab IDs under the spaceId in session state', async () => {
     await seedFocusedWindow([{ url: 'https://tagged.com/' }])
 
     await archiveCurrentWindowToSpace('space-x')
@@ -121,7 +121,7 @@ describe('archiveCurrentWindowToSpace', () => {
     expect(state.spaceIdToTabIds['space-x']!.length).toBeGreaterThan(0)
   })
 
-  it('closes chrome:// tabs and counts them as closedNonRestorable', async () => {
+  it('skips chrome:// tabs without closing them', async () => {
     await seedFocusedWindow([
       { url: 'https://good.com/' },
       { url: 'chrome://settings/' },
@@ -130,7 +130,12 @@ describe('archiveCurrentWindowToSpace', () => {
     const { archived, closedNonRestorable } = await archiveCurrentWindowToSpace('space-2')
 
     expect(archived.map((t) => t.url)).toEqual(['https://good.com/'])
-    expect(closedNonRestorable).toBe(1)
+    expect(closedNonRestorable).toBe(0)
+
+    // chrome:// 标签仍在原处(不归档但也不关)
+    const focusedTabs = await fakeBrowser.tabs.query({ windowId: FOCUSED_WIN })
+    const focusedUrls = focusedTabs.map((t: chrome.tabs.Tab) => t.url)
+    expect(focusedUrls).toContain('chrome://settings/')
   })
 
   it('skips the manager (self-extension) tab', async () => {
@@ -196,18 +201,19 @@ describe('switchToSpace', () => {
   })
 
   it('moves vaulted tabs of the target space back into the focused window', async () => {
-    // Archive some tabs into the vault under space-A
+    // 先归档(只打标,标签仍在焦点窗口);再切到别的空间(把 tagged 标签搬入 vault)
     await seedFocusedWindow([{ url: 'https://space-a.com/' }])
     await archiveCurrentWindowToSpace('space-A')
+    await switchToSpace('space-other', [])
 
-    // Verify tabs moved to vault
-    const stateAfterArchive = await readSessionState()
-    const vaultId = stateAfterArchive.vaultWindowId!
+    // 此时 space-A 的标签已经在 vault 里
+    const stateAfterAway = await readSessionState()
+    const vaultId = stateAfterAway.vaultWindowId!
     const tabsInVault = await fakeBrowser.tabs.query({ windowId: vaultId })
     const vaultUrls = tabsInVault.map((t: chrome.tabs.Tab) => t.url)
     expect(vaultUrls).toContain('https://space-a.com/')
 
-    // Now switch to space-A — its vaulted tabs should come to focused window
+    // 切到 space-A — vault 里的标签搬回焦点窗口
     await switchToSpace('space-A', [{ url: 'https://space-a.com/', title: 'a' }])
 
     const focusedTabs = await fakeBrowser.tabs.query({ windowId: FOCUSED_WIN })
@@ -276,13 +282,9 @@ describe('moveLiveTabToSpace', () => {
     await seedFocusedWindow([{ url: 'https://shared.com/' }])
     await archiveCurrentWindowToSpace('space-A')
 
-    const stateAfterArchive = await readSessionState()
-    const vaultId = stateAfterArchive.vaultWindowId!
-    const vaultedTabs = await fakeBrowser.tabs.query({ windowId: vaultId })
-    const tabId = vaultedTabs.find((t: chrome.tabs.Tab) => t.url === 'https://shared.com/')!.id!
-
-    // 把 tab 拉回焦点窗口才能让 moveLiveTabToSpace 找到它(模拟"用户在 A 空间里")
-    await fakeBrowser.tabs.update(tabId, { windowId: FOCUSED_WIN })
+    // 归档后标签仍在焦点窗口(新语义)
+    const focusedTabs = await fakeBrowser.tabs.query({ windowId: FOCUSED_WIN })
+    const tabId = focusedTabs.find((t: chrome.tabs.Tab) => t.url === 'https://shared.com/')!.id!
 
     const { tab, fromSpaceId } = await moveLiveTabToSpace(tabId, 'space-B')
 
@@ -342,15 +344,10 @@ describe('moveLiveTabToSpace', () => {
 
   it('no-op when tab already belongs to the target space — returns null', async () => {
     await seedFocusedWindow([{ url: 'https://same.com/' }])
-    // Archive so the tab is already tagged for space-X
+    // 归档让 tab 打上 space-X 的标(标签留在焦点窗口)
     await archiveCurrentWindowToSpace('space-X')
-    const stateAfterArchive = await readSessionState()
-    const vaultId = stateAfterArchive.vaultWindowId!
-    const vaultedTabs = await fakeBrowser.tabs.query({ windowId: vaultId })
-    const tabId = vaultedTabs.find((t: chrome.tabs.Tab) => t.url === 'https://same.com/')!.id!
-
-    // Bring tab to focused window so the lookup works
-    await fakeBrowser.tabs.update(tabId, { windowId: FOCUSED_WIN })
+    const focusedTabs = await fakeBrowser.tabs.query({ windowId: FOCUSED_WIN })
+    const tabId = focusedTabs.find((t: chrome.tabs.Tab) => t.url === 'https://same.com/')!.id!
 
     const { tab, fromSpaceId } = await moveLiveTabToSpace(tabId, 'space-X')
 
