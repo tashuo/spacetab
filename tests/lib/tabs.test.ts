@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { fakeBrowser } from '@webext-core/fake-browser'
 import {
   closeFocusedWindowTabs,
@@ -23,6 +23,8 @@ beforeEach(async () => {
   // fake-browser 默认无窗口;手动注入两个窗口
   await fakeBrowser.windows.create({ focused: true })
   await fakeBrowser.windows.create({ focused: false })
+  // 让所有 getURL 调用都返回本扩展的 origin,使自排除逻辑可测
+  vi.spyOn(chrome.runtime, 'getURL').mockReturnValue('chrome-extension://test-id/')
 })
 
 describe('snapshotFocusedWindow', () => {
@@ -32,6 +34,15 @@ describe('snapshotFocusedWindow', () => {
       { url: 'https://b/', windowId: FOCUSED_WIN, pinned: true },
       { url: 'chrome://settings/', windowId: FOCUSED_WIN },
       { url: 'https://other/', windowId: OTHER_WIN },
+    ])
+    const snap = await snapshotFocusedWindow()
+    expect(snap.map((t) => t.url)).toEqual(['https://a/'])
+  })
+
+  it('excludes the manager tab (self-extension URL) from snapshot', async () => {
+    await seed([
+      { url: 'https://a/', windowId: FOCUSED_WIN },
+      { url: 'chrome-extension://test-id/manager.html', windowId: FOCUSED_WIN },
     ])
     const snap = await snapshotFocusedWindow()
     expect(snap.map((t) => t.url)).toEqual(['https://a/'])
@@ -59,6 +70,18 @@ describe('closeFocusedWindowTabs', () => {
     expect(remaining).toHaveLength(1)
     expect(remaining[0]?.url).toBe('about:blank')
   })
+
+  it('does NOT close the manager tab, and does NOT insert about:blank when manager survives', async () => {
+    await seed([
+      { url: 'https://a/', windowId: FOCUSED_WIN },
+      { url: 'chrome-extension://test-id/manager.html', windowId: FOCUSED_WIN },
+    ])
+    await closeFocusedWindowTabs()
+    const remaining = await fakeBrowser.tabs.query({ windowId: FOCUSED_WIN })
+    // 只剩 manager tab,没有 about:blank 占位
+    expect(remaining).toHaveLength(1)
+    expect(remaining[0]?.url).toBe('chrome-extension://test-id/manager.html')
+  })
 })
 
 describe('replaceFocusedWindowTabs', () => {
@@ -76,5 +99,21 @@ describe('replaceFocusedWindowTabs', () => {
     const remaining = await fakeBrowser.tabs.query({ windowId: FOCUSED_WIN })
     const urls = remaining.map((t: { url?: string }) => t.url).sort()
     expect(urls).toEqual(['https://new1/', 'https://new2/', 'https://pinned/'])
+  })
+
+  it('keeps the manager tab while replacing other non-pinned tabs', async () => {
+    await seed([
+      { url: 'https://old1/', windowId: FOCUSED_WIN },
+      { url: 'chrome-extension://test-id/manager.html', windowId: FOCUSED_WIN },
+    ])
+    const result = await replaceFocusedWindowTabs([
+      { url: 'https://new1/', title: 'n1' },
+    ])
+    expect(result.failed).toEqual([])
+
+    const remaining = await fakeBrowser.tabs.query({ windowId: FOCUSED_WIN })
+    const urls = remaining.map((t: { url?: string }) => t.url).sort()
+    // manager 保留,old1 被关闭,new1 被打开
+    expect(urls).toEqual(['chrome-extension://test-id/manager.html', 'https://new1/'])
   })
 })

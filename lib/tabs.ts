@@ -7,6 +7,13 @@ function canRestore(url: string | undefined): url is string {
   return !SKIP_URL_PREFIXES.some((p) => url.startsWith(p))
 }
 
+// 判断某个 tab 是否属于本扩展自身页面(如 manager tab),避免归档/关闭时误操作
+function isSelfExtension(url: string | undefined): boolean {
+  if (!url) return false
+  const prefix = chrome.runtime.getURL('')
+  return prefix.length > 0 && url.startsWith(prefix)
+}
+
 async function focusedWindowId(): Promise<number> {
   const win = await chrome.windows.getCurrent()
   if (typeof win.id !== 'number') {
@@ -20,6 +27,7 @@ export async function snapshotFocusedWindow(): Promise<Tab[]> {
   const tabs = await chrome.tabs.query({ windowId, pinned: false })
   const out: Tab[] = []
   for (const t of tabs) {
+    if (isSelfExtension(t.url)) continue
     if (!canRestore(t.url)) continue
     const url = t.url!
     out.push({
@@ -35,15 +43,13 @@ export async function closeFocusedWindowTabs(): Promise<void> {
   const windowId = await focusedWindowId()
   const all = await chrome.tabs.query({ windowId })
   const toClose: number[] = []
-  let hasPinned = false
   for (const t of all) {
-    if (t.pinned) {
-      hasPinned = true
-      continue
-    }
+    if (t.pinned) continue
+    if (isSelfExtension(t.url)) continue
     if (typeof t.id === 'number') toClose.push(t.id)
   }
-  if (!hasPinned && toClose.length === all.length && toClose.length > 0) {
+  // 只有当所有 tab 都在待关闭列表时,窗口才会被清空,需要先插入占位
+  if (toClose.length === all.length && toClose.length > 0) {
     await chrome.tabs.create({ windowId, url: 'about:blank', active: false })
   }
   if (toClose.length > 0) await chrome.tabs.remove(toClose)
@@ -55,12 +61,9 @@ export async function replaceFocusedWindowTabs(
   const windowId = await focusedWindowId()
   const before = await chrome.tabs.query({ windowId })
   const oldIds: number[] = []
-  let hasPinned = false
   for (const t of before) {
-    if (t.pinned) {
-      hasPinned = true
-      continue
-    }
+    if (t.pinned) continue
+    if (isSelfExtension(t.url)) continue
     if (typeof t.id === 'number') oldIds.push(t.id)
   }
 
@@ -75,7 +78,8 @@ export async function replaceFocusedWindowTabs(
     }
   }
 
-  if (!createdAny && !hasPinned && oldIds.length > 0) {
+  // 只有当所有 before tab 都要被关闭(窗口会被清空)且一个新 tab 都没开出来时,才插入占位
+  if (!createdAny && oldIds.length === before.length && oldIds.length > 0) {
     try {
       await chrome.tabs.create({ windowId, url: 'about:blank', active: false })
     } catch {
