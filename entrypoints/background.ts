@@ -10,6 +10,6 @@ export default defineBackground(() => {
       }
       return
     }
-    await chrome.tabs.create({ url: managerUrl, active: true })
+    await chrome.tabs.create({ url: managerUrl, active: true, pinned: true })
   })
 })
