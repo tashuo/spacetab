@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { ArchiveBar } from '@/components/archive-bar'
+import { LiveTabsPanel } from '@/components/live-tabs-panel'
 import { SpaceList } from '@/components/space-list'
 import { ToastStack } from '@/components/toast-stack'
 import { useSpaceStore } from '@/stores/space-store'
@@ -73,6 +74,7 @@ export default function App() {
         </header>
 
         <div className="bg-white border border-slate-200 rounded shadow-sm overflow-hidden">
+          <LiveTabsPanel />
           <ArchiveBar
             spaces={db.spaces}
             onArchiveExisting={archiveExisting}
