@@ -12,6 +12,13 @@ interface EditableCluster {
   included: boolean
 }
 
+interface DragPayload {
+  fromClusterId: string
+  tabUrl: string
+}
+
+const DRAG_MIME = 'application/x-spacetab-cluster-tab'
+
 interface Props {
   initialClusters: ClusterDraft[]
   totalTabsCount: number
@@ -36,7 +43,10 @@ export function SmartArchiveDialog({ initialClusters, totalTabsCount, onCancel, 
     })),
   )
 
-  // ESC 关闭对话框
+  // 当前正被拖动的 tab(用于源行的视觉淡出);拖到的目标 cluster id(用于高亮 drop zone)
+  const [dragging, setDragging] = useState<DragPayload | null>(null)
+  const [dragOverClusterId, setDragOverClusterId] = useState<string | null>(null)
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onCancel()
@@ -57,6 +67,23 @@ export function SmartArchiveDialog({ initialClusters, totalTabsCount, onCancel, 
     setClusters((prev) =>
       prev.map((c) => (c.id === clusterId ? { ...c, tabs: c.tabs.filter((tab) => tab.url !== url) } : c)),
     )
+  }
+  const moveTabBetween = (fromId: string, toId: string, url: string) => {
+    if (fromId === toId) return
+    setClusters((prev) => {
+      const source = prev.find((c) => c.id === fromId)
+      const tab = source?.tabs.find((t) => t.url === url)
+      if (!tab) return prev
+      return prev.map((c) => {
+        if (c.id === fromId) return { ...c, tabs: c.tabs.filter((t) => t.url !== url) }
+        if (c.id === toId) {
+          // 去重:目标已有同 url 则不重复加
+          if (c.tabs.some((t) => t.url === url)) return c
+          return { ...c, tabs: [...c.tabs, tab] }
+        }
+        return c
+      })
+    })
   }
 
   const handleConfirm = () => {
@@ -99,9 +126,27 @@ export function SmartArchiveDialog({ initialClusters, totalTabsCount, onCancel, 
             <ClusterCard
               key={c.id}
               cluster={c}
+              dragOver={dragOverClusterId === c.id}
+              draggingPayload={dragging}
               onToggle={() => toggleIncluded(c.id)}
               onRename={(name) => updateName(c.id, name)}
               onRemoveTab={(url) => removeTab(c.id, url)}
+              onTabDragStart={(url) => setDragging({ fromClusterId: c.id, tabUrl: url })}
+              onTabDragEnd={() => {
+                setDragging(null)
+                setDragOverClusterId(null)
+              }}
+              onCardDragEnter={() => {
+                if (dragging && dragging.fromClusterId !== c.id) setDragOverClusterId(c.id)
+              }}
+              onCardDragLeave={() => {
+                setDragOverClusterId((prev) => (prev === c.id ? null : prev))
+              }}
+              onCardDrop={(payload) => {
+                moveTabBetween(payload.fromClusterId, c.id, payload.tabUrl)
+                setDragging(null)
+                setDragOverClusterId(null)
+              }}
             />
           ))}
         </div>
@@ -129,20 +174,69 @@ export function SmartArchiveDialog({ initialClusters, totalTabsCount, onCancel, 
 
 function ClusterCard({
   cluster,
+  dragOver,
+  draggingPayload,
   onToggle,
   onRename,
   onRemoveTab,
+  onTabDragStart,
+  onTabDragEnd,
+  onCardDragEnter,
+  onCardDragLeave,
+  onCardDrop,
 }: {
   cluster: EditableCluster
+  dragOver: boolean
+  draggingPayload: DragPayload | null
   onToggle: () => void
   onRename: (name: string) => void
   onRemoveTab: (url: string) => void
+  onTabDragStart: (url: string) => void
+  onTabDragEnd: () => void
+  onCardDragEnter: () => void
+  onCardDragLeave: () => void
+  onCardDrop: (payload: DragPayload) => void
 }) {
   const muted = !cluster.included || cluster.tabs.length === 0
+  const acceptingDrop =
+    dragOver && draggingPayload !== null && draggingPayload.fromClusterId !== cluster.id
+
   return (
     <div
+      onDragEnter={(e) => {
+        if (e.dataTransfer.types.includes(DRAG_MIME)) {
+          e.preventDefault()
+          onCardDragEnter()
+        }
+      }}
+      onDragOver={(e) => {
+        if (e.dataTransfer.types.includes(DRAG_MIME)) {
+          e.preventDefault()
+          e.dataTransfer.dropEffect = 'move'
+        }
+      }}
+      onDragLeave={(e) => {
+        // 防止子元素之间冒泡造成抖动:仅当真正离开卡片时关
+        if (e.currentTarget.contains(e.relatedTarget as Node)) return
+        onCardDragLeave()
+      }}
+      onDrop={(e) => {
+        const raw = e.dataTransfer.getData(DRAG_MIME)
+        if (!raw) return
+        e.preventDefault()
+        try {
+          const payload = JSON.parse(raw) as DragPayload
+          onCardDrop(payload)
+        } catch {
+          // ignore malformed payload
+        }
+      }}
       className={`rounded-lg border transition-colors ${
-        muted ? 'border-slate-200 bg-slate-50/40' : 'border-slate-200 bg-white'
+        acceptingDrop
+          ? 'border-violet-400 bg-violet-50/40 ring-2 ring-violet-200'
+          : muted
+          ? 'border-slate-200 bg-slate-50/40'
+          : 'border-slate-200 bg-white'
       }`}
     >
       <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100">
@@ -167,14 +261,23 @@ function ClusterCard({
         {cluster.tabs.length === 0 ? (
           <div className="text-xs text-slate-400 py-2 text-center">—</div>
         ) : (
-          cluster.tabs.map((tab) => (
-            <ClusterTabRow
-              key={tab.url}
-              tab={tab}
-              onRemove={() => onRemoveTab(tab.url)}
-              muted={muted}
-            />
-          ))
+          cluster.tabs.map((tab) => {
+            const isDraggingThis =
+              draggingPayload?.fromClusterId === cluster.id &&
+              draggingPayload.tabUrl === tab.url
+            return (
+              <ClusterTabRow
+                key={tab.url}
+                tab={tab}
+                fromClusterId={cluster.id}
+                muted={muted}
+                isDraggingThis={isDraggingThis}
+                onRemove={() => onRemoveTab(tab.url)}
+                onDragStart={() => onTabDragStart(tab.url)}
+                onDragEnd={onTabDragEnd}
+              />
+            )
+          })
         )}
       </div>
     </div>
@@ -183,18 +286,34 @@ function ClusterCard({
 
 function ClusterTabRow({
   tab,
-  onRemove,
+  fromClusterId,
   muted,
+  isDraggingThis,
+  onRemove,
+  onDragStart,
+  onDragEnd,
 }: {
   tab: Tab
-  onRemove: () => void
+  fromClusterId: string
   muted: boolean
+  isDraggingThis: boolean
+  onRemove: () => void
+  onDragStart: () => void
+  onDragEnd: () => void
 }) {
   return (
     <div
-      className={`group/row flex items-center gap-2 px-1 py-1 text-[13px] ${
+      draggable
+      onDragStart={(e) => {
+        const payload: DragPayload = { fromClusterId, tabUrl: tab.url }
+        e.dataTransfer.setData(DRAG_MIME, JSON.stringify(payload))
+        e.dataTransfer.effectAllowed = 'move'
+        onDragStart()
+      }}
+      onDragEnd={onDragEnd}
+      className={`group/row flex items-center gap-2 px-1 py-1 text-[13px] cursor-grab active:cursor-grabbing rounded ${
         muted ? 'text-slate-400' : 'text-slate-700'
-      }`}
+      } ${isDraggingThis ? 'opacity-40' : ''}`}
     >
       {tab.favIconUrl ? (
         <img src={tab.favIconUrl} alt="" className="w-4 h-4 rounded-sm flex-shrink-0" />
