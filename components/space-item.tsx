@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { Space } from '@/lib/schema'
 import { colorForSpace, relativeTime } from '@/lib/ui-utils'
 import { useT } from '@/lib/i18n'
-import { ArrowRight, Pencil, Trash } from './icons'
+import { ArrowRight, Copy, Pencil, Trash } from './icons'
 import { SpaceTabRow } from './space-tab-row'
 
 interface Props {
@@ -11,6 +11,7 @@ interface Props {
   onSwitch: (id: string) => void
   onRename: (id: string, name: string) => void
   onDelete: (id: string) => void
+  onDuplicate: (id: string) => void
   onTabOpen: (url: string) => void
   onTabRemove: (spaceId: string, url: string) => void
   onTabMove: (fromId: string, toId: string, url: string) => void
@@ -22,6 +23,7 @@ export function SpaceItem({
   onSwitch,
   onRename,
   onDelete,
+  onDuplicate,
   onTabOpen,
   onTabRemove,
   onTabMove,
@@ -100,6 +102,14 @@ export function SpaceItem({
               aria-label={t('rename')}
             >
               <Pencil className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => onDuplicate(space.id)}
+              className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              title={t('duplicate')}
+              aria-label={t('duplicate')}
+            >
+              <Copy className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={onConfirmDelete}

@@ -8,6 +8,7 @@ interface Props {
   onSwitch: (id: string) => void
   onRename: (id: string, name: string) => void
   onDelete: (id: string) => void
+  onDuplicate: (id: string) => void
   onTabOpen: (url: string) => void
   onTabRemove: (spaceId: string, url: string) => void
   onTabMove: (fromId: string, toId: string, url: string) => void
@@ -18,6 +19,7 @@ export function SpaceList({
   onSwitch,
   onRename,
   onDelete,
+  onDuplicate,
   onTabOpen,
   onTabRemove,
   onTabMove,
@@ -46,6 +48,7 @@ export function SpaceList({
           onSwitch={onSwitch}
           onRename={onRename}
           onDelete={onDelete}
+          onDuplicate={onDuplicate}
           onTabOpen={onTabOpen}
           onTabRemove={onTabRemove}
           onTabMove={onTabMove}

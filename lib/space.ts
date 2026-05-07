@@ -64,6 +64,25 @@ export function removeTabFromSpace(
   return { ...db, spaces: nextSpaces }
 }
 
+export function duplicateSpace(
+  db: Database,
+  sourceId: string,
+  newId: string,
+  newName: string,
+  now: number,
+): Database {
+  const source = db.spaces.find((s) => s.id === sourceId)
+  if (!source) return db
+  const copy: Space = {
+    id: newId,
+    name: newName,
+    tabs: source.tabs.map((t) => ({ ...t })),
+    createdAt: now,
+    updatedAt: now,
+  }
+  return { ...db, spaces: [...db.spaces, copy] }
+}
+
 export function moveTab(
   db: Database,
   fromId: string,

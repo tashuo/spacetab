@@ -4,6 +4,7 @@ import {
   archiveToSpace,
   createSpace,
   deleteSpace,
+  duplicateSpace,
   findSpace,
   moveTab,
   removeTabFromSpace,
@@ -170,5 +171,40 @@ describe('moveTab', () => {
     expect(next.spaces[0]?.tabs.map((x) => x.url)).toEqual(['https://b/'])
     // not duplicated in target
     expect(next.spaces[1]?.tabs.map((x) => x.url)).toEqual(['https://a/'])
+  })
+})
+
+describe('duplicateSpace', () => {
+  it('appends a copy with new id, new name, fresh timestamps, same tabs', () => {
+    const db = makeDb([
+      makeSpace({
+        id: 'sp1',
+        name: 'Work',
+        tabs: [t('https://a/'), t('https://b/')],
+        createdAt: 100,
+        updatedAt: 150,
+      }),
+    ])
+    const next = duplicateSpace(db, 'sp1', 'sp2', 'Work copy', 300)
+    expect(next.spaces).toHaveLength(2)
+    const copy = next.spaces[1]!
+    expect(copy.id).toBe('sp2')
+    expect(copy.name).toBe('Work copy')
+    expect(copy.createdAt).toBe(300)
+    expect(copy.updatedAt).toBe(300)
+    expect(copy.tabs.map((x) => x.url)).toEqual(['https://a/', 'https://b/'])
+    expect(next.spaces[0]).toEqual(db.spaces[0])
+  })
+
+  it('copies tabs by value', () => {
+    const db = makeDb([makeSpace({ id: 'sp1', tabs: [t('https://a/')] })])
+    const next = duplicateSpace(db, 'sp1', 'sp2', 'Copy', 300)
+    expect(next.spaces[1]!.tabs[0]).not.toBe(db.spaces[0]!.tabs[0])
+  })
+
+  it('returns same reference when source not found', () => {
+    const db = makeDb([makeSpace({ id: 'sp1' })])
+    const next = duplicateSpace(db, 'ghost', 'sp2', 'X', 300)
+    expect(next).toBe(db)
   })
 })

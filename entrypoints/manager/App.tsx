@@ -11,7 +11,7 @@ import type { Tab } from '@/lib/schema'
 export default function App() {
   const {
     db, loaded, toasts,
-    load, archive, archiveNew, rename, remove,
+    load, archive, archiveNew, rename, remove, duplicate,
     removeTab, moveTab,
     dismissToast, pushToast,
   } = useSpaceStore()
@@ -75,6 +75,21 @@ export default function App() {
     }
   }
 
+  const handleDuplicate = async (id: string) => {
+    const source = db.spaces.find((s) => s.id === id)
+    if (!source) {
+      pushToast('error', t('toastSpaceMissing'))
+      return
+    }
+    const newName = `${source.name}${t('duplicateSuffix')}`
+    try {
+      const newId = await duplicate(id, newName)
+      if (newId) pushToast('info', t('toastDuplicated', { name: newName }))
+    } catch {
+      pushToast('error', t('toastDuplicateFailed'))
+    }
+  }
+
   const switchTo = async (id: string) => {
     const target = db.spaces.find((s) => s.id === id)
     if (!target) {
@@ -117,6 +132,7 @@ export default function App() {
               onSwitch={switchTo}
               onRename={rename}
               onDelete={remove}
+              onDuplicate={handleDuplicate}
               onTabOpen={openTabUrl}
               onTabRemove={removeTab}
               onTabMove={moveTab}

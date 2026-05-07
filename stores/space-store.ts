@@ -23,6 +23,7 @@ interface State {
   remove: (id: string) => Promise<void>
   removeTab: (spaceId: string, url: string) => Promise<boolean>
   moveTab: (fromId: string, toId: string, url: string) => Promise<boolean>
+  duplicate: (sourceId: string, newName: string) => Promise<string | null>
   pushToast: (kind: ToastKind, text: string) => void
   dismissToast: (id: number) => void
 }
@@ -136,6 +137,25 @@ export const useSpaceStore = create<State>((set, get) => ({
       return false
     }
     return true
+  },
+
+  duplicate: async (sourceId, newName) => {
+    const before = get().db
+    if (!before.spaces.some((s) => s.id === sourceId)) {
+      get().pushToast('error', '空间已不存在')
+      return null
+    }
+    const newId = crypto.randomUUID()
+    const next = space.duplicateSpace(before, sourceId, newId, newName, Date.now())
+    if (next === before) return null
+    set({ db: next })
+    const result = await writeDatabase(next)
+    if (!result.ok) {
+      set({ db: before })
+      get().pushToast('error', '存储写入失败,已回滚')
+      return null
+    }
+    return newId
   },
 
   pushToast: (kind, text) => {
