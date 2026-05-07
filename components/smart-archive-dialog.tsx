@@ -3,13 +3,15 @@ import { createPortal } from 'react-dom'
 import type { Tab } from '@/lib/schema'
 import type { ClusterDraft, ClusterLabel } from '@/lib/clustering'
 import { useT } from '@/lib/i18n'
-import { X, Sparkle } from './icons'
+import { X, Sparkle, Trash } from './icons'
 
 interface EditableCluster {
   id: string
   name: string
   tabs: Tab[]
   included: boolean
+  // 标识"其他"那一组——删除其他分组时,标签会汇入此组(若不存在则按需创建)
+  isOther: boolean
 }
 
 interface DragPayload {
@@ -40,8 +42,13 @@ export function SmartArchiveDialog({ initialClusters, totalTabsCount, onCancel, 
       name: resolveLabel(c.label),
       tabs: [...c.tabs],
       included: true,
+      isOther: c.label.kind === 'category' && c.label.key === 'categoryOther',
     })),
   )
+
+  // 用本地 ref 计数生成新 cluster id,避免与初始的 c0..cN 撞
+  const nextClusterIdRef = useState({ n: initialClusters.length })[0]
+  const allocClusterId = () => `c${nextClusterIdRef.n++}`
 
   // 当前正被拖动的 tab(用于源行的视觉淡出);拖到的目标 cluster id(用于高亮 drop zone)
   const [dragging, setDragging] = useState<DragPayload | null>(null)
@@ -68,6 +75,41 @@ export function SmartArchiveDialog({ initialClusters, totalTabsCount, onCancel, 
       prev.map((c) => (c.id === clusterId ? { ...c, tabs: c.tabs.filter((tab) => tab.url !== url) } : c)),
     )
   }
+  // 删除整组:标签合并到"其他"组(若不存在则新建);若被删的本身就是"其他",标签直接丢弃
+  const deleteCluster = (clusterId: string) => {
+    setClusters((prev) => {
+      const target = prev.find((c) => c.id === clusterId)
+      if (!target) return prev
+      if (target.isOther) {
+        // 删"其他"组本身,直接移除
+        return prev.filter((c) => c.id !== clusterId)
+      }
+      const otherIdx = prev.findIndex((c) => c.isOther)
+      const tabsToTransfer = target.tabs
+      if (otherIdx >= 0) {
+        // 合并到已有"其他"
+        const otherCluster = prev[otherIdx]!
+        const existingUrls = new Set(otherCluster.tabs.map((t) => t.url))
+        const merged = [
+          ...otherCluster.tabs,
+          ...tabsToTransfer.filter((t) => !existingUrls.has(t.url)),
+        ]
+        return prev
+          .filter((c) => c.id !== clusterId)
+          .map((c) => (c.id === otherCluster.id ? { ...c, tabs: merged } : c))
+      }
+      // 没有"其他"组,新建一个并把标签放进去
+      const newOther: EditableCluster = {
+        id: allocClusterId(),
+        name: t('categoryOther'),
+        tabs: tabsToTransfer,
+        included: true,
+        isOther: true,
+      }
+      return [...prev.filter((c) => c.id !== clusterId), newOther]
+    })
+  }
+
   const moveTabBetween = (fromId: string, toId: string, url: string) => {
     if (fromId === toId) return
     setClusters((prev) => {
@@ -131,6 +173,7 @@ export function SmartArchiveDialog({ initialClusters, totalTabsCount, onCancel, 
               onToggle={() => toggleIncluded(c.id)}
               onRename={(name) => updateName(c.id, name)}
               onRemoveTab={(url) => removeTab(c.id, url)}
+              onDelete={() => deleteCluster(c.id)}
               onTabDragStart={(url) => setDragging({ fromClusterId: c.id, tabUrl: url })}
               onTabDragEnd={() => {
                 setDragging(null)
@@ -179,6 +222,7 @@ function ClusterCard({
   onToggle,
   onRename,
   onRemoveTab,
+  onDelete,
   onTabDragStart,
   onTabDragEnd,
   onCardDragEnter,
@@ -191,12 +235,14 @@ function ClusterCard({
   onToggle: () => void
   onRename: (name: string) => void
   onRemoveTab: (url: string) => void
+  onDelete: () => void
   onTabDragStart: (url: string) => void
   onTabDragEnd: () => void
   onCardDragEnter: () => void
   onCardDragLeave: () => void
   onCardDrop: (payload: DragPayload) => void
 }) {
+  const { t } = useT()
   const muted = !cluster.included || cluster.tabs.length === 0
   const acceptingDrop =
     dragOver && draggingPayload !== null && draggingPayload.fromClusterId !== cluster.id
@@ -239,7 +285,7 @@ function ClusterCard({
           : 'border-slate-200 bg-white'
       }`}
     >
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100">
+      <div className="group/header flex items-center gap-2 px-3 py-2 border-b border-slate-100">
         <input
           type="checkbox"
           checked={cluster.included}
@@ -256,6 +302,14 @@ function ClusterCard({
         <span className={`text-xs font-mono ${muted ? 'text-slate-300' : 'text-slate-500'}`}>
           {cluster.tabs.length}
         </span>
+        <button
+          onClick={onDelete}
+          className="opacity-0 group-hover/header:opacity-100 focus-visible:opacity-100 w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-opacity"
+          title={t('deleteCluster')}
+          aria-label={t('deleteCluster')}
+        >
+          <Trash className="w-3.5 h-3.5" />
+        </button>
       </div>
       <div className="px-3 py-2 space-y-0.5 max-h-48 overflow-y-auto">
         {cluster.tabs.length === 0 ? (
