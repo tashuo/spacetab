@@ -97,6 +97,15 @@ export function Copy({ className }: IconProps) {
   )
 }
 
+export function Sparkle({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M12 3 L13.5 8.5 L19 10 L13.5 11.5 L12 17 L10.5 11.5 L5 10 L10.5 8.5 Z" />
+      <path d="M19 3 L19.5 4.5 L21 5 L19.5 5.5 L19 7 L18.5 5.5 L17 5 L18.5 4.5 Z" />
+    </svg>
+  )
+}
+
 export function Globe({ className }: IconProps) {
   return (
     <svg
