@@ -5,6 +5,8 @@ import {
   createSpace,
   deleteSpace,
   findSpace,
+  moveTab,
+  removeTabFromSpace,
   renameSpace,
 } from '@/lib/space'
 import type { Database, Space, Tab } from '@/lib/schema'
@@ -97,5 +99,76 @@ describe('archiveToSpace', () => {
     const next = archiveToSpace(db, 'sp1', [t('https://a/'), t('https://b/')], 300)
     expect(next.spaces[0]?.tabs.map((x) => x.url)).toEqual(['https://a/', 'https://b/'])
     expect(next.spaces[0]?.updatedAt).toBe(300)
+  })
+})
+
+describe('removeTabFromSpace', () => {
+  it('removes matching url, bumps updatedAt, leaves other spaces alone', () => {
+    const db = makeDb([
+      makeSpace({ id: 'sp1', tabs: [t('https://a/'), t('https://b/')] }),
+      makeSpace({ id: 'sp2', name: 'Other', tabs: [t('https://c/')] }),
+    ])
+    const next = removeTabFromSpace(db, 'sp1', 'https://a/', 200)
+    expect(next.spaces[0]?.tabs.map((x) => x.url)).toEqual(['https://b/'])
+    expect(next.spaces[0]?.updatedAt).toBe(200)
+    // other space untouched
+    expect(next.spaces[1]).toBe(db.spaces[1])
+  })
+
+  it('returns same reference when url not found', () => {
+    const db = makeDb([makeSpace({ id: 'sp1', tabs: [t('https://a/')] })])
+    const next = removeTabFromSpace(db, 'sp1', 'https://nope/', 200)
+    expect(next).toBe(db)
+  })
+
+  it('returns same reference when spaceId not found', () => {
+    const db = makeDb([makeSpace({ id: 'sp1', tabs: [t('https://a/')] })])
+    const next = removeTabFromSpace(db, 'ghost', 'https://a/', 200)
+    expect(next).toBe(db)
+  })
+})
+
+describe('moveTab', () => {
+  it('moves tab from source to target', () => {
+    const db = makeDb([
+      makeSpace({ id: 'sp1', tabs: [t('https://a/'), t('https://b/')] }),
+      makeSpace({ id: 'sp2', name: 'Two', tabs: [] }),
+    ])
+    const next = moveTab(db, 'sp1', 'sp2', 'https://a/', 300)
+    expect(next.spaces[0]?.tabs.map((x) => x.url)).toEqual(['https://b/'])
+    expect(next.spaces[1]?.tabs.map((x) => x.url)).toEqual(['https://a/'])
+  })
+
+  it('is no-op when fromId === toId (returns same ref)', () => {
+    const db = makeDb([makeSpace({ id: 'sp1', tabs: [t('https://a/')] })])
+    const next = moveTab(db, 'sp1', 'sp1', 'https://a/', 300)
+    expect(next).toBe(db)
+  })
+
+  it('is no-op when tab not in source (returns same ref)', () => {
+    const db = makeDb([
+      makeSpace({ id: 'sp1', tabs: [t('https://a/')] }),
+      makeSpace({ id: 'sp2', name: 'Two', tabs: [] }),
+    ])
+    const next = moveTab(db, 'sp1', 'sp2', 'https://nope/', 300)
+    expect(next).toBe(db)
+  })
+
+  it('is no-op when target space not found', () => {
+    const db = makeDb([makeSpace({ id: 'sp1', tabs: [t('https://a/')] })])
+    const next = moveTab(db, 'sp1', 'ghost', 'https://a/', 300)
+    expect(next).toBe(db)
+  })
+
+  it('dedupes when target already has the same url', () => {
+    const db = makeDb([
+      makeSpace({ id: 'sp1', tabs: [t('https://a/'), t('https://b/')] }),
+      makeSpace({ id: 'sp2', name: 'Two', tabs: [t('https://a/')] }),
+    ])
+    const next = moveTab(db, 'sp1', 'sp2', 'https://a/', 300)
+    // removed from source
+    expect(next.spaces[0]?.tabs.map((x) => x.url)).toEqual(['https://b/'])
+    // not duplicated in target
+    expect(next.spaces[1]?.tabs.map((x) => x.url)).toEqual(['https://a/'])
   })
 })

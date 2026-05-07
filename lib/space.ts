@@ -45,3 +45,44 @@ export function archiveToSpace(
     spaces: db.spaces.map((s) => (s.id === id ? appendTabs(s, tabs, now) : s)),
   }
 }
+
+export function removeTabFromSpace(
+  db: Database,
+  spaceId: string,
+  tabUrl: string,
+  now: number,
+): Database {
+  let changed = false
+  const nextSpaces = db.spaces.map((s) => {
+    if (s.id !== spaceId) return s
+    const tabs = s.tabs.filter((t) => t.url !== tabUrl)
+    if (tabs.length === s.tabs.length) return s
+    changed = true
+    return { ...s, tabs, updatedAt: now }
+  })
+  if (!changed) return db
+  return { ...db, spaces: nextSpaces }
+}
+
+export function moveTab(
+  db: Database,
+  fromId: string,
+  toId: string,
+  tabUrl: string,
+  now: number,
+): Database {
+  if (fromId === toId) return db
+  const fromSpace = db.spaces.find((s) => s.id === fromId)
+  const tab = fromSpace?.tabs.find((t) => t.url === tabUrl)
+  if (!tab) return db
+  const toSpace = db.spaces.find((s) => s.id === toId)
+  if (!toSpace) return db
+
+  const afterRemove = removeTabFromSpace(db, fromId, tabUrl, now)
+  return {
+    ...afterRemove,
+    spaces: afterRemove.spaces.map((s) =>
+      s.id === toId ? appendTabs(s, [tab], now) : s,
+    ),
+  }
+}
