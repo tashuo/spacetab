@@ -259,15 +259,8 @@ export async function moveLiveTabToSpace(
     return { tab: null, fromSpaceId: null }
   }
 
-  // 4. Move tab into vault
-  const vaultId = await ensureVaultWindow()
-  try {
-    await chrome.tabs.move([tabId], { windowId: vaultId, index: -1 })
-  } catch {
-    return { tab: null, fromSpaceId }
-  }
-
-  // 5. Update session: untag from old (if any), tag to new
+  // 4. 仅打标,不立即搬到 vault——保持当前窗口里这个 tab 的可见性。
+  //    下次切到别的空间时,switchToSpace 会按 tagged 处理把它搬进 vault。
   let nextState = state
   if (fromSpaceId !== null) {
     nextState = untagTabIdInState(nextState, tabId)

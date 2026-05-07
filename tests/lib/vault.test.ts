@@ -260,6 +260,18 @@ describe('moveLiveTabToSpace', () => {
     expect(state.spaceIdToTabIds['space-X']).toContain(tabId)
   })
 
+  it('keeps the tab in the focused window after tagging — does NOT move to vault', async () => {
+    await seedFocusedWindow([{ url: 'https://stay.com/' }])
+    const focusedTabs = await fakeBrowser.tabs.query({ windowId: FOCUSED_WIN })
+    const tabId = focusedTabs.find((t: chrome.tabs.Tab) => t.url === 'https://stay.com/')!.id!
+
+    await moveLiveTabToSpace(tabId, 'space-X')
+
+    // 标签仍在焦点窗口,没被移走
+    const after = await fakeBrowser.tabs.get(tabId)
+    expect(after.windowId).toBe(FOCUSED_WIN)
+  })
+
   it('re-tags a tab from space A to space B — fromSpaceId is A, session moves the id', async () => {
     await seedFocusedWindow([{ url: 'https://retag.com/' }])
     await archiveCurrentWindowToSpace('space-A')
