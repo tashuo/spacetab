@@ -194,18 +194,16 @@ export async function switchToSpace(
   return { failed }
 }
 
-export async function purgeVaultedTabsForSpace(spaceId: string): Promise<void> {
+// 删除空间时调用:仅解除 session 里对这些 tabId 的归属关系。
+// 不关闭任何标签——它们继续存在(在 vault 或可见窗口),变成"无空间归属"的孤儿,
+// 用户可以手动归到别的空间或自己关掉。
+export async function releaseSpaceTabs(spaceId: string): Promise<void> {
   const state = await readSessionState()
-  const ids = state.spaceIdToTabIds[spaceId] ?? []
-  if (ids.length > 0) {
-    try {
-      await chrome.tabs.remove(ids)
-    } catch {
-      // ignore — some IDs may already be invalid
-    }
-  }
   await writeSessionState(dropSpaceFromState(state, spaceId))
 }
+
+// 历史名,保留转发以避免外部破坏
+export const purgeVaultedTabsForSpace = releaseSpaceTabs
 
 export async function moveLiveTabToSpace(
   tabId: number,

@@ -225,19 +225,33 @@ describe('switchToSpace', () => {
 // ---------------------------------------------------------------------------
 // purgeVaultedTabsForSpace
 // ---------------------------------------------------------------------------
-describe('purgeVaultedTabsForSpace', () => {
-  it('removes vaulted tabs for the space and drops the session entry', async () => {
-    await seedFocusedWindow([{ url: 'https://to-purge.com/' }])
-    await archiveCurrentWindowToSpace('space-purge')
+describe('purgeVaultedTabsForSpace (releaseSpaceTabs)', () => {
+  it('drops the session entry for the space', async () => {
+    await seedFocusedWindow([{ url: 'https://to-release.com/' }])
+    await archiveCurrentWindowToSpace('space-release')
 
-    // Confirm session entry exists
     const stateBefore = await readSessionState()
-    expect(stateBefore.spaceIdToTabIds['space-purge']).toBeDefined()
+    expect(stateBefore.spaceIdToTabIds['space-release']).toBeDefined()
 
-    await purgeVaultedTabsForSpace('space-purge')
+    await purgeVaultedTabsForSpace('space-release')
 
     const stateAfter = await readSessionState()
-    expect(stateAfter.spaceIdToTabIds['space-purge']).toBeUndefined()
+    expect(stateAfter.spaceIdToTabIds['space-release']).toBeUndefined()
+  })
+
+  it('does NOT close the tabs — they remain alive (orphaned)', async () => {
+    await seedFocusedWindow([{ url: 'https://stay-alive.com/' }])
+    await archiveCurrentWindowToSpace('space-x')
+
+    const focusedBefore = await fakeBrowser.tabs.query({ windowId: FOCUSED_WIN })
+    const target = focusedBefore.find((t: chrome.tabs.Tab) => t.url === 'https://stay-alive.com/')!
+    const tabId = target.id!
+
+    await purgeVaultedTabsForSpace('space-x')
+
+    // 标签仍然存在(没被关掉)
+    const stillThere = await fakeBrowser.tabs.get(tabId)
+    expect(stillThere.url).toBe('https://stay-alive.com/')
   })
 
   it('is a no-op when the spaceId has no session entry', async () => {
