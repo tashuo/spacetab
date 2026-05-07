@@ -8,7 +8,7 @@ export default defineConfig({
   }),
   manifest: {
     name: 'SpaceTab',
-    description: '基于项目空间的 Chrome 标签管理',
+    description: 'Chrome tab manager built around project spaces',
     version: '0.1.0',
     permissions: ['tabs', 'storage'],
     action: {
