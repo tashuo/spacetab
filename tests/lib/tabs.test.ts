@@ -116,4 +116,18 @@ describe('replaceFocusedWindowTabs', () => {
     // manager 保留,old1 被关闭,new1 被打开
     expect(urls).toEqual(['chrome-extension://test-id/manager.html', 'https://new1/'])
   })
+
+  it('creates http(s) tabs as discarded so the strip fills instantly without loading', async () => {
+    type CreateProps = chrome.tabs.CreateProperties & { discarded?: boolean }
+    const createSpy = vi.spyOn(fakeBrowser.tabs, 'create')
+    await replaceFocusedWindowTabs([
+      { url: 'https://web/', title: 'w' },
+      { url: 'file:///local.html', title: 'f' },
+    ])
+    const calls = createSpy.mock.calls as Array<[CreateProps]>
+    const httpCall = calls.find((c) => c[0]?.url === 'https://web/')
+    const fileCall = calls.find((c) => c[0]?.url === 'file:///local.html')
+    expect(httpCall?.[0]?.discarded).toBe(true)
+    expect(fileCall?.[0]?.discarded).toBeUndefined()
+  })
 })

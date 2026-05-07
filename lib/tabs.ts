@@ -71,7 +71,18 @@ export async function replaceFocusedWindowTabs(
   let createdAny = false
   for (const tab of tabs) {
     try {
-      await chrome.tabs.create({ windowId, url: tab.url, active: false })
+      // discarded:true 让标签只在标签栏占位、不真正加载,点中再加载。
+      // Chrome 只允许对 http(s) 用 discarded;其它协议(file://、ftp://)走普通创建。
+      // discarded 字段较新,@types/chrome 当前版本未声明,这里用交叉类型扩展。
+      type CreateProps = chrome.tabs.CreateProperties & { discarded?: boolean }
+      const isWebUrl = /^https?:\/\//i.test(tab.url)
+      const props: CreateProps = {
+        windowId,
+        url: tab.url,
+        active: false,
+      }
+      if (isWebUrl) props.discarded = true
+      await chrome.tabs.create(props)
       createdAny = true
     } catch {
       failed.push(tab)
