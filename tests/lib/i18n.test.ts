@@ -26,8 +26,32 @@ describe('detectBrowserLang', () => {
     expect(detectBrowserLang()).toBe('zh-CN')
   })
 
-  it('maps zh-TW to zh-CN', async () => {
+  it('maps zh-TW to zh-TW', async () => {
     withLang('zh-TW')
+    const { detectBrowserLang } = await import('@/lib/i18n')
+    expect(detectBrowserLang()).toBe('zh-TW')
+  })
+
+  it('maps zh-HK to zh-TW (Traditional)', async () => {
+    withLang('zh-HK')
+    const { detectBrowserLang } = await import('@/lib/i18n')
+    expect(detectBrowserLang()).toBe('zh-TW')
+  })
+
+  it('maps zh-Hant to zh-TW via script tag', async () => {
+    withLang('zh-Hant')
+    const { detectBrowserLang } = await import('@/lib/i18n')
+    expect(detectBrowserLang()).toBe('zh-TW')
+  })
+
+  it('maps bare zh to zh-CN', async () => {
+    withLang('zh')
+    const { detectBrowserLang } = await import('@/lib/i18n')
+    expect(detectBrowserLang()).toBe('zh-CN')
+  })
+
+  it('maps zh-SG to zh-CN', async () => {
+    withLang('zh-SG')
     const { detectBrowserLang } = await import('@/lib/i18n')
     expect(detectBrowserLang()).toBe('zh-CN')
   })

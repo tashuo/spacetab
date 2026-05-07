@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 
-export type Lang = 'zh-CN' | 'en' | 'ja' | 'de'
-export const LANGS: Lang[] = ['zh-CN', 'en', 'ja', 'de']
+export type Lang = 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'de'
+export const LANGS: Lang[] = ['zh-CN', 'zh-TW', 'en', 'ja', 'de']
 export const LANG_LABELS: Record<Lang, string> = {
-  'zh-CN': '中文',
+  'zh-CN': '简体中文',
+  'zh-TW': '繁體中文',
   en: 'English',
   ja: '日本語',
   de: 'Deutsch',
@@ -65,6 +66,60 @@ const messages: Record<Lang, Record<string, string>> = {
     timeMonthsAgo: '{n} 个月前',
     timeYearsAgo: '{n} 年前',
     languageSelect: '语言',
+  },
+  'zh-TW': {
+    appName: 'SpaceTab',
+    spacesCount: '{n} 個空間',
+    mySpaces: '我的空間',
+    currentWindow: '目前視窗',
+    headerSubtitle: '隨時點擊擴充功能圖示返回此處。封存/切換僅影響目前視窗的非固定分頁。',
+    archiveCurrentWindow: '封存目前視窗',
+    archiveTo: '封存至…',
+    newSpace: '新增空間',
+    newSpaceName: '新空間名稱',
+    create: '建立',
+    switchAction: '切換',
+    switchToSpaceTitle: '切換至此空間',
+    rename: '重新命名',
+    delete: '刪除',
+    duplicate: '複製',
+    duplicateSuffix: ' 副本',
+    toastDuplicated: '已複製為「{name}」',
+    toastDuplicateFailed: '複製失敗,請重試',
+    moveToOtherSpace: '移至其他空間',
+    moveTo: '移至…',
+    removeFromSpace: '從空間移除',
+    moveToSpaceLive: '加入空間',
+    closeTab: '關閉分頁',
+    tabsLabel: 'tabs',
+    loading: '載入中…',
+    emptyTitle: '還沒有空間',
+    emptySubtitle: '點擊右上角「封存目前視窗」收集第一組分頁',
+    emptyLiveTabs: '沒有其他分頁',
+    confirmDelete: '刪除空間「{name}」?其中 {n} 個分頁將一併遺失。',
+    toastArchived: '已將 {n} 個分頁封存至「{name}」',
+    toastArchivedNew: '已建立「{name}」並封存 {n} 個分頁',
+    toastSwitched: '已切換至「{name}」',
+    toastFailedTabs: '{n} 個分頁無法還原',
+    toastArchiveFailed: '封存失敗,請重試',
+    toastSwitchFailed: '切換失敗,請重試',
+    toastCannotMove: '無法移動該分頁',
+    toastAddedTo: '已加入「{name}」',
+    toastMoveFailed: '移動失敗,請重試',
+    toastSpaceMissing: '空間已不存在',
+    toastWindowEmpty: '目前視窗沒有可封存的分頁',
+    toastStorageReadFailed: '儲存讀取失敗',
+    toastStorageWriteFailed: '儲存寫入失敗,已回復',
+    toastDataCorrupted: '資料毀損,已備份至 {backupKey}',
+    timeJustNow: '剛剛',
+    timeMinutesAgo: '{n} 分鐘前',
+    timeHoursAgo: '{n} 小時前',
+    timeYesterday: '昨天',
+    timeDaysAgo: '{n} 天前',
+    timeWeeksAgo: '{n} 週前',
+    timeMonthsAgo: '{n} 個月前',
+    timeYearsAgo: '{n} 年前',
+    languageSelect: '語言',
   },
   en: {
     appName: 'SpaceTab',
@@ -246,7 +301,18 @@ export function detectBrowserLang(): Lang {
     raw = ''
   }
   const lower = raw.toLowerCase()
-  if (lower.startsWith('zh')) return 'zh-CN'
+  if (lower.startsWith('zh')) {
+    // 繁体地区:台、港、澳;Hant 脚本标签也算繁体
+    if (
+      lower.startsWith('zh-tw') ||
+      lower.startsWith('zh-hk') ||
+      lower.startsWith('zh-mo') ||
+      lower.includes('hant')
+    ) {
+      return 'zh-TW'
+    }
+    return 'zh-CN'
+  }
   if (lower.startsWith('ja')) return 'ja'
   if (lower.startsWith('de')) return 'de'
   return 'en'
