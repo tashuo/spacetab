@@ -11,8 +11,12 @@ import {
 } from '@/lib/tabs'
 
 export default function App() {
-  const { db, loaded, toasts, load, archive, archiveNew, rename, remove, dismissToast, pushToast } =
-    useSpaceStore()
+  const {
+    db, loaded, toasts,
+    load, archive, archiveNew, rename, remove,
+    removeTab, moveTab,
+    dismissToast, pushToast,
+  } = useSpaceStore()
 
   useEffect(() => {
     void load()
@@ -47,6 +51,10 @@ export default function App() {
     } catch {
       pushToast('error', '归档失败,请重试')
     }
+  }
+
+  const openTabUrl = (url: string) => {
+    void chrome.tabs.create({ url, active: true })
   }
 
   const switchTo = async (id: string) => {
@@ -91,6 +99,9 @@ export default function App() {
               onSwitch={switchTo}
               onRename={rename}
               onDelete={remove}
+              onTabOpen={openTabUrl}
+              onTabRemove={removeTab}
+              onTabMove={moveTab}
             />
           ) : (
             <div className="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center text-sm text-slate-400">

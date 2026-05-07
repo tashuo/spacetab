@@ -2,17 +2,29 @@ import { useState } from 'react'
 import type { Space } from '@/lib/schema'
 import { colorForSpace, relativeTime } from '@/lib/ui-utils'
 import { ArrowRight, Pencil, Trash } from './icons'
+import { SpaceTabRow } from './space-tab-row'
 
 interface Props {
   space: Space
+  otherSpaces: Space[]
   onSwitch: (id: string) => void
   onRename: (id: string, name: string) => void
   onDelete: (id: string) => void
+  onTabOpen: (url: string) => void
+  onTabRemove: (spaceId: string, url: string) => void
+  onTabMove: (fromId: string, toId: string, url: string) => void
 }
 
-const FAVICON_PREVIEW_LIMIT = 8
-
-export function SpaceItem({ space, onSwitch, onRename, onDelete }: Props) {
+export function SpaceItem({
+  space,
+  otherSpaces,
+  onSwitch,
+  onRename,
+  onDelete,
+  onTabOpen,
+  onTabRemove,
+  onTabMove,
+}: Props) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(space.name)
   const color = colorForSpace(space.id)
@@ -30,9 +42,6 @@ export function SpaceItem({ space, onSwitch, onRename, onDelete }: Props) {
     )
     if (ok) onDelete(space.id)
   }
-
-  const previews = space.tabs.slice(0, FAVICON_PREVIEW_LIMIT)
-  const overflow = space.tabs.length - previews.length
 
   return (
     <div className="group relative bg-white rounded-xl border border-slate-200 p-4 transition-all duration-150 hover:border-slate-300 hover:shadow-[0_2px_4px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.06)]">
@@ -98,31 +107,19 @@ export function SpaceItem({ space, onSwitch, onRename, onDelete }: Props) {
         </div>
       </div>
       {space.tabs.length > 0 && (
-        <div className="mt-3 pl-4 flex items-center gap-1.5">
-          {previews.map((t, i) => (
-            <FaviconChip key={`${t.url}-${i}`} url={t.favIconUrl} title={t.title} />
+        <div className="mt-3 pl-4 space-y-0.5">
+          {space.tabs.map((t, i) => (
+            <SpaceTabRow
+              key={`${t.url}-${i}`}
+              tab={t}
+              otherSpaces={otherSpaces}
+              onOpen={onTabOpen}
+              onRemove={(url) => onTabRemove(space.id, url)}
+              onMove={(toId, url) => onTabMove(space.id, toId, url)}
+            />
           ))}
-          {overflow > 0 && (
-            <span className="text-[11px] font-mono text-slate-400 ml-0.5">+{overflow}</span>
-          )}
         </div>
       )}
     </div>
-  )
-}
-
-function FaviconChip({ url, title }: { url: string | undefined; title: string }) {
-  const [failed, setFailed] = useState(false)
-  if (!url || failed) {
-    return <span className="w-4 h-4 rounded-sm bg-slate-200 flex-shrink-0" title={title} />
-  }
-  return (
-    <img
-      src={url}
-      alt=""
-      title={title}
-      onError={() => setFailed(true)}
-      className="w-4 h-4 rounded-sm flex-shrink-0"
-    />
   )
 }

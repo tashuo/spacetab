@@ -7,9 +7,20 @@ interface Props {
   onSwitch: (id: string) => void
   onRename: (id: string, name: string) => void
   onDelete: (id: string) => void
+  onTabOpen: (url: string) => void
+  onTabRemove: (spaceId: string, url: string) => void
+  onTabMove: (fromId: string, toId: string, url: string) => void
 }
 
-export function SpaceList({ spaces, onSwitch, onRename, onDelete }: Props) {
+export function SpaceList({
+  spaces,
+  onSwitch,
+  onRename,
+  onDelete,
+  onTabOpen,
+  onTabRemove,
+  onTabMove,
+}: Props) {
   if (spaces.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-slate-300 px-6 py-16 text-center bg-slate-50/40">
@@ -28,9 +39,13 @@ export function SpaceList({ spaces, onSwitch, onRename, onDelete }: Props) {
         <SpaceItem
           key={s.id}
           space={s}
+          otherSpaces={spaces.filter((x) => x.id !== s.id)}
           onSwitch={onSwitch}
           onRename={onRename}
           onDelete={onDelete}
+          onTabOpen={onTabOpen}
+          onTabRemove={onTabRemove}
+          onTabMove={onTabMove}
         />
       ))}
     </div>
