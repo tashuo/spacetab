@@ -117,17 +117,28 @@ describe('replaceFocusedWindowTabs', () => {
     expect(urls).toEqual(['chrome-extension://test-id/manager.html', 'https://new1/'])
   })
 
-  it('creates http(s) tabs as discarded so the strip fills instantly without loading', async () => {
-    type CreateProps = chrome.tabs.CreateProperties & { discarded?: boolean }
-    const createSpy = vi.spyOn(fakeBrowser.tabs, 'create')
+  it('discards http(s) tabs after creation so they sit in the strip without loading', async () => {
+    // fakeBrowser 默认没有 discard,补一个 stub 让我们的代码能进入 discard 分支
+    const discardStub = vi.fn(async (_id: number) => undefined as unknown as chrome.tabs.Tab)
+    Object.defineProperty(fakeBrowser.tabs, 'discard', {
+      configurable: true,
+      writable: true,
+      value: discardStub,
+    })
     await replaceFocusedWindowTabs([
       { url: 'https://web/', title: 'w' },
       { url: 'file:///local.html', title: 'f' },
     ])
-    const calls = createSpy.mock.calls as Array<[CreateProps]>
-    const httpCall = calls.find((c) => c[0]?.url === 'https://web/')
-    const fileCall = calls.find((c) => c[0]?.url === 'file:///local.html')
-    expect(httpCall?.[0]?.discarded).toBe(true)
-    expect(fileCall?.[0]?.discarded).toBeUndefined()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    const discardedIds = discardStub.mock.calls.map((args) => args[0])
+    const created = await fakeBrowser.tabs.query({ url: 'https://web/' })
+    const webId = created[0]?.id
+    expect(typeof webId).toBe('number')
+    expect(discardedIds).toContain(webId)
+    const localCreated = await fakeBrowser.tabs.query({ url: 'file:///local.html' })
+    const fileId = localCreated[0]?.id
+    if (typeof fileId === 'number') {
+      expect(discardedIds).not.toContain(fileId)
+    }
   })
 })
