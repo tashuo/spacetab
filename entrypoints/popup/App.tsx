@@ -14,20 +14,28 @@ export default function App() {
   }, [load])
 
   const archiveExisting = async (spaceId: string) => {
-    const tabs = await snapshotFocusedWindow()
-    const ok = await archive(spaceId, tabs)
-    if (ok) {
-      await closeFocusedWindowTabs()
-      window.close()
+    try {
+      const tabs = await snapshotFocusedWindow()
+      const ok = await archive(spaceId, tabs)
+      if (ok) {
+        await closeFocusedWindowTabs()
+        window.close()
+      }
+    } catch {
+      pushToast('error', '归档失败,请重试')
     }
   }
 
   const archiveNewName = async (name: string) => {
-    const tabs = await snapshotFocusedWindow()
-    const id = await archiveNew(name, tabs)
-    if (id) {
-      await closeFocusedWindowTabs()
-      window.close()
+    try {
+      const tabs = await snapshotFocusedWindow()
+      const id = await archiveNew(name, tabs)
+      if (id) {
+        await closeFocusedWindowTabs()
+        window.close()
+      }
+    } catch {
+      pushToast('error', '归档失败,请重试')
     }
   }
 
@@ -37,11 +45,15 @@ export default function App() {
       pushToast('error', '空间已不存在')
       return
     }
-    const result = await replaceFocusedWindowTabs(target.tabs)
-    if (result.failed.length > 0) {
-      pushToast('error', `${result.failed.length} 个标签无法恢复`)
-    } else {
-      window.close()
+    try {
+      const result = await replaceFocusedWindowTabs(target.tabs)
+      if (result.failed.length > 0) {
+        pushToast('error', `${result.failed.length} 个标签无法恢复`)
+      } else {
+        window.close()
+      }
+    } catch {
+      pushToast('error', '切换失败,请重试')
     }
   }
 

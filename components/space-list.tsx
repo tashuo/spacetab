@@ -20,7 +20,7 @@ export function SpaceList({ spaces, onSwitch, onRename, onDelete }: Props) {
   const sorted = [...spaces].sort((a, b) => b.updatedAt - a.updatedAt)
 
   return (
-    <div>
+    <div className="max-h-[440px] overflow-y-auto">
       {sorted.map((s) => (
         <SpaceItem
           key={s.id}
