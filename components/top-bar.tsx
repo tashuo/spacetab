@@ -2,9 +2,12 @@ import { useState, useRef, useEffect } from 'react'
 import { Layers, Globe } from './icons'
 import { useT, LANGS, LANG_LABELS } from '@/lib/i18n'
 import type { Space } from '@/lib/schema'
+import { SettingsMenu } from './settings-menu'
 
 interface Props {
   spaces: Space[]
+  onExport: () => void
+  onImport: () => void
 }
 
 function LanguageSwitcher() {
@@ -53,7 +56,7 @@ function LanguageSwitcher() {
   )
 }
 
-export function TopBar({ spaces }: Props) {
+export function TopBar({ spaces, onExport, onImport }: Props) {
   const { t } = useT()
 
   return (
@@ -70,6 +73,7 @@ export function TopBar({ spaces }: Props) {
         </div>
         <div className="flex items-center gap-2">
           <LanguageSwitcher />
+          <SettingsMenu onExport={onExport} onImport={onImport} />
         </div>
       </div>
     </header>

@@ -4,17 +4,29 @@ import { SpaceList } from '@/components/space-list'
 import { LiveTabsPanel } from '@/components/live-tabs-panel'
 import { ToastStack } from '@/components/toast-stack'
 import { SmartArchiveDialog } from '@/components/smart-archive-dialog'
+import { ImportDialog } from '@/components/import-dialog'
 import { useSpaceStore } from '@/stores/space-store'
 import { archiveCurrentWindowToSpace, moveLiveTabToSpace, snapshotCurrentWindow, switchToSpace } from '@/lib/vault'
 import { clusterTabs } from '@/lib/clustering'
+import {
+  serializeForExport,
+  parseImport,
+  mergeDatabase,
+  replaceDatabase,
+  summarizeImport,
+  downloadJson,
+  pickJsonFile,
+  exportFilename,
+  type ImportSummary,
+} from '@/lib/export-import'
 import { useT } from '@/lib/i18n'
-import type { Tab } from '@/lib/schema'
+import type { Tab, Database } from '@/lib/schema'
 
 export default function App() {
   const {
     db, loaded, toasts,
     load, archive, archiveNew, rename, remove, duplicate,
-    removeTab, moveTab, merge,
+    removeTab, moveTab, merge, importDb,
     dismissToast, pushToast,
   } = useSpaceStore()
 
@@ -24,6 +36,43 @@ export default function App() {
     clusters: ReturnType<typeof clusterTabs>
     total: number
   } | null>(null)
+
+  const [importDialog, setImportDialog] = useState<{
+    incoming: Database
+    summary: ImportSummary
+  } | null>(null)
+
+  const handleExport = () => {
+    const json = serializeForExport(db)
+    downloadJson(json, exportFilename())
+    pushToast('info', t('toastExported', { n: db.spaces.length }))
+  }
+
+  const handleImport = async () => {
+    const text = await pickJsonFile()
+    if (!text) return
+    const result = parseImport(text)
+    if (!result.ok) {
+      pushToast('error', t('toastImportFailed'))
+      return
+    }
+    const summary = summarizeImport(db, result.file.db)
+    setImportDialog({ incoming: result.file.db, summary })
+  }
+
+  const handleImportConfirm = async (mode: 'merge' | 'replace') => {
+    if (!importDialog) return
+    const next =
+      mode === 'merge'
+        ? mergeDatabase(db, importDialog.incoming)
+        : replaceDatabase(db, importDialog.incoming)
+    const incomingCount = importDialog.incoming.spaces.length
+    setImportDialog(null)
+    const ok = await importDb(next)
+    if (ok) {
+      pushToast('info', t('toastImported', { n: incomingCount }))
+    }
+  }
 
   useEffect(() => {
     void load()
@@ -201,7 +250,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-900">
-      <TopBar spaces={db.spaces} />
+      <TopBar spaces={db.spaces} onExport={handleExport} onImport={handleImport} />
       <main className="max-w-6xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
         <aside className="lg:col-span-4 lg:sticky lg:top-20 lg:self-start">
           <LiveTabsPanel
@@ -245,6 +294,13 @@ export default function App() {
           totalTabsCount={smartDialog.total}
           onCancel={() => setSmartDialog(null)}
           onConfirm={handleSmartArchiveConfirm}
+        />
+      )}
+      {importDialog && (
+        <ImportDialog
+          summary={importDialog.summary}
+          onCancel={() => setImportDialog(null)}
+          onConfirm={handleImportConfirm}
         />
       )}
     </div>
