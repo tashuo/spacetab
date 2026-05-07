@@ -165,6 +165,8 @@ export async function switchToSpace(
   for (const tab of toSpaceTabs) {
     if (liveUrls.has(tab.url)) continue
     try {
+      // 冷启动场景(vault 里没有这条 URL 的真实标签):正常创建,
+      // 让 Chrome 在后台加载真实内容(标题、favicon、页面)。不再 discard。
       const created = await chrome.tabs.create({
         windowId: focusedId,
         url: tab.url,
@@ -172,14 +174,6 @@ export async function switchToSpace(
       })
       if (typeof created.id === 'number') {
         newlyCreatedIds.push(created.id)
-        const isWebUrl = /^https?:\/\//i.test(tab.url)
-        if (isWebUrl && typeof chrome.tabs.discard === 'function') {
-          try {
-            void chrome.tabs.discard(created.id).catch(() => undefined)
-          } catch {
-            // ignore
-          }
-        }
       }
     } catch {
       failed.push(tab)
