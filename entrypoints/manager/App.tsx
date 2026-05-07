@@ -58,20 +58,15 @@ export default function App() {
 
   const handleLiveTabMove = async (tabId: number, toSpaceId: string) => {
     try {
-      const { tab, fromSpaceId } = await moveLiveTabToSpace(tabId, toSpaceId)
+      const { tab } = await moveLiveTabToSpace(tabId, toSpaceId)
       if (!tab) {
         pushToast('error', '无法移动该标签')
         return
       }
-      if (fromSpaceId !== null) {
-        // 源空间有这个 URL,需要在 db 里迁移
-        await moveTab(fromSpaceId, toSpaceId, tab.url)
-      } else {
-        // 游离标签 — 追加到目标空间(store 内部去重)
-        await archive(toSpaceId, [tab])
-      }
+      // 仅追加到目标空间,不修改原空间(URL 可同时属于多个空间)
+      await archive(toSpaceId, [tab])
       const name = db.spaces.find((s) => s.id === toSpaceId)?.name ?? '空间'
-      pushToast('info', `已移到「${name}」`)
+      pushToast('info', `已加入「${name}」`)
     } catch {
       pushToast('error', '移动失败,请重试')
     }

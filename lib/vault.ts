@@ -245,30 +245,21 @@ export async function moveLiveTabToSpace(
   if (isSelfExtension(chromeTab.url)) return { tab: null, fromSpaceId: null }
   if (!canRestore(chromeTab.url)) return { tab: null, fromSpaceId: null }
 
-  // 3. Reverse-lookup current tag (if any)
+  // 3. Reverse-lookup: 这个 tab 是否已经在目标空间里(避免重复打标)
   const state = await readSessionState()
-  let fromSpaceId: string | null = null
-  for (const [sid, ids] of Object.entries(state.spaceIdToTabIds)) {
-    if (ids.includes(tabId)) {
-      fromSpaceId = sid
-      break
-    }
-  }
-  if (fromSpaceId === toSpaceId) {
-    // 已经在目标空间里,无需操作
+  const targetIds = state.spaceIdToTabIds[toSpaceId] ?? []
+  if (targetIds.includes(tabId)) {
+    // 已经属于目标,无需操作
     return { tab: null, fromSpaceId: null }
   }
 
-  // 4. 仅打标,不立即搬到 vault——保持当前窗口里这个 tab 的可见性。
-  //    下次切到别的空间时,switchToSpace 会按 tagged 处理把它搬进 vault。
-  let nextState = state
-  if (fromSpaceId !== null) {
-    nextState = untagTabIdInState(nextState, tabId)
-  }
-  nextState = tagTabIdsForSpace(nextState, toSpaceId, [tabId])
+  // 4. 仅 ADD 打标——不从源空间移除。
+  //    标签可以同时属于多个空间(URL 在多个 space.tabs[],session 在多个 spaceIdToTabIds)。
+  //    切到任一空间时这个 tab 都会被搬回可见窗口。
+  const nextState = tagTabIdsForSpace(state, toSpaceId, [tabId])
   await writeSessionState(nextState)
 
-  // 6. Build Tab payload from current chrome.tabs.Tab snapshot
+  // 5. Build Tab payload from current chrome.tabs.Tab snapshot
   const url = chromeTab.url!
   const payload: Tab = {
     url,
@@ -276,7 +267,7 @@ export async function moveLiveTabToSpace(
     ...(chromeTab.favIconUrl ? { favIconUrl: chromeTab.favIconUrl } : {}),
   }
 
-  return { tab: payload, fromSpaceId }
+  return { tab: payload, fromSpaceId: null }
 }
 
 // Called from background listeners

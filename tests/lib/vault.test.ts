@@ -272,27 +272,27 @@ describe('moveLiveTabToSpace', () => {
     expect(after.windowId).toBe(FOCUSED_WIN)
   })
 
-  it('re-tags a tab from space A to space B — fromSpaceId is A, session moves the id', async () => {
-    await seedFocusedWindow([{ url: 'https://retag.com/' }])
+  it('adds the tab to the target space without removing it from the source', async () => {
+    await seedFocusedWindow([{ url: 'https://shared.com/' }])
     await archiveCurrentWindowToSpace('space-A')
 
     const stateAfterArchive = await readSessionState()
     const vaultId = stateAfterArchive.vaultWindowId!
     const vaultedTabs = await fakeBrowser.tabs.query({ windowId: vaultId })
-    const tabId = vaultedTabs.find((t: chrome.tabs.Tab) => t.url === 'https://retag.com/')!.id!
+    const tabId = vaultedTabs.find((t: chrome.tabs.Tab) => t.url === 'https://shared.com/')!.id!
 
-    // Bring the tab back into the focused window so moveLiveTabToSpace can get it
+    // 把 tab 拉回焦点窗口才能让 moveLiveTabToSpace 找到它(模拟"用户在 A 空间里")
     await fakeBrowser.tabs.update(tabId, { windowId: FOCUSED_WIN })
 
     const { tab, fromSpaceId } = await moveLiveTabToSpace(tabId, 'space-B')
 
     expect(tab).not.toBeNull()
-    expect(fromSpaceId).toBe('space-A')
+    expect(fromSpaceId).toBeNull() // API 返回的 fromSpaceId 总是 null,因为不再"搬"
 
     const state = await readSessionState()
-    // A should no longer contain tabId
-    expect(state.spaceIdToTabIds['space-A'] ?? []).not.toContain(tabId)
-    // B should contain tabId
+    // A 仍然包含这个 tabId(没有被移除)
+    expect(state.spaceIdToTabIds['space-A']).toContain(tabId)
+    // B 也包含
     expect(state.spaceIdToTabIds['space-B']).toContain(tabId)
   })
 
@@ -340,7 +340,7 @@ describe('moveLiveTabToSpace', () => {
     expect(stateAfter).toEqual(stateBefore)
   })
 
-  it('no-op when source space equals target space — returns null tab and null fromSpaceId', async () => {
+  it('no-op when tab already belongs to the target space — returns null', async () => {
     await seedFocusedWindow([{ url: 'https://same.com/' }])
     // Archive so the tab is already tagged for space-X
     await archiveCurrentWindowToSpace('space-X')
