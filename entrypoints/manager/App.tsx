@@ -4,7 +4,7 @@ import { SpaceList } from '@/components/space-list'
 import { LiveTabsPanel } from '@/components/live-tabs-panel'
 import { ToastStack } from '@/components/toast-stack'
 import { useSpaceStore } from '@/stores/space-store'
-import { archiveCurrentWindowToSpace, switchToSpace } from '@/lib/vault'
+import { archiveCurrentWindowToSpace, moveLiveTabToSpace, switchToSpace } from '@/lib/vault'
 import type { Tab } from '@/lib/schema'
 
 export default function App() {
@@ -56,6 +56,27 @@ export default function App() {
     void chrome.tabs.create({ url, active: true })
   }
 
+  const handleLiveTabMove = async (tabId: number, toSpaceId: string) => {
+    try {
+      const { tab, fromSpaceId } = await moveLiveTabToSpace(tabId, toSpaceId)
+      if (!tab) {
+        pushToast('error', '无法移动该标签')
+        return
+      }
+      if (fromSpaceId !== null) {
+        // 源空间有这个 URL,需要在 db 里迁移
+        await moveTab(fromSpaceId, toSpaceId, tab.url)
+      } else {
+        // 游离标签 — 追加到目标空间(store 内部去重)
+        await archive(toSpaceId, [tab])
+      }
+      const name = db.spaces.find((s) => s.id === toSpaceId)?.name ?? '空间'
+      pushToast('info', `已移到「${name}」`)
+    } catch {
+      pushToast('error', '移动失败,请重试')
+    }
+  }
+
   const switchTo = async (id: string) => {
     const target = db.spaces.find((s) => s.id === id)
     if (!target) {
@@ -83,7 +104,7 @@ export default function App() {
       />
       <main className="max-w-6xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
         <aside className="lg:col-span-4 lg:sticky lg:top-20 lg:self-start">
-          <LiveTabsPanel />
+          <LiveTabsPanel spaces={db.spaces} onMoveToSpace={handleLiveTabMove} />
         </aside>
         <section className="lg:col-span-8">
           <div className="mb-3 px-1 flex items-baseline justify-between">
