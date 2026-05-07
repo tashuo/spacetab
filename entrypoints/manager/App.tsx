@@ -1,11 +1,14 @@
 import { useEffect } from 'react'
-import { ArchiveBar } from '@/components/archive-bar'
-import { LiveTabsPanel } from '@/components/live-tabs-panel'
+import { TopBar } from '@/components/top-bar'
 import { SpaceList } from '@/components/space-list'
+import { LiveTabsPanel } from '@/components/live-tabs-panel'
 import { ToastStack } from '@/components/toast-stack'
-import { Layers } from '@/components/icons'
 import { useSpaceStore } from '@/stores/space-store'
-import { snapshotFocusedWindow, closeFocusedWindowTabs, replaceFocusedWindowTabs } from '@/lib/tabs'
+import {
+  snapshotFocusedWindow,
+  closeFocusedWindowTabs,
+  replaceFocusedWindowTabs,
+} from '@/lib/tabs'
 
 export default function App() {
   const { db, loaded, toasts, load, archive, archiveNew, rename, remove, dismissToast, pushToast } =
@@ -65,36 +68,38 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF9] text-slate-900 py-8">
-      <div className="max-w-[640px] mx-auto px-4">
-        <header className="mb-6 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-accent-600 text-white flex items-center justify-center shadow-sm">
-            <Layers className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-xl font-semibold tracking-tight">SpaceTab</h1>
-            <p className="text-sm text-slate-500 mt-0.5">
-              点扩展图标随时回到这里。归档/切换只影响当前窗口的非固定标签。
-            </p>
-          </div>
-        </header>
-
-        <div className="bg-white border border-slate-200/80 rounded-xl shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_12px_rgba(15,23,42,0.04)] overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-900">
+      <TopBar
+        spaces={db.spaces}
+        onArchiveExisting={archiveExisting}
+        onArchiveNew={archiveNewName}
+      />
+      <main className="max-w-6xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <aside className="lg:col-span-4 lg:sticky lg:top-20 lg:self-start">
           <LiveTabsPanel />
-          <ArchiveBar
-            spaces={db.spaces}
-            onArchiveExisting={archiveExisting}
-            onArchiveNew={archiveNewName}
-          />
+        </aside>
+        <section className="lg:col-span-8">
+          <div className="mb-3 px-1 flex items-baseline justify-between">
+            <h2 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+              我的空间
+            </h2>
+            <span className="text-[11px] font-mono text-slate-400">{db.spaces.length}</span>
+          </div>
           {loaded ? (
-            <SpaceList spaces={db.spaces} onSwitch={switchTo} onRename={rename} onDelete={remove} />
+            <SpaceList
+              spaces={db.spaces}
+              onSwitch={switchTo}
+              onRename={rename}
+              onDelete={remove}
+            />
           ) : (
-            <div className="px-4 py-8 text-center text-sm text-slate-400">加载中…</div>
+            <div className="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center text-sm text-slate-400">
+              加载中…
+            </div>
           )}
-        </div>
-
-        <ToastStack toasts={toasts} onDismiss={dismissToast} />
-      </div>
+        </section>
+      </main>
+      <ToastStack toasts={toasts} onDismiss={dismissToast} />
     </div>
   )
 }
