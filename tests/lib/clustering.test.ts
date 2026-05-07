@@ -101,4 +101,27 @@ describe('clusterTabs', () => {
   it('returns empty array for empty input', () => {
     expect(clusterTabs([])).toEqual([])
   })
+
+  it('groups cloud-provider tabs into Cloud category and disambiguates aws.amazon.com from amazon.com', () => {
+    const tabs = [
+      { url: 'https://console.aws.amazon.com/ec2/home', title: 'AWS EC2' },
+      { url: 'https://console.cloud.google.com/compute', title: 'GCP Compute' },
+      { url: 'https://vercel.com/dashboard', title: 'Vercel' },
+      { url: 'https://amazon.com/dp/B07', title: 'Amazon shopping' },
+    ]
+    const result = clusterTabs(tabs)
+    const cloud = result.find(
+      (c) => c.label.kind === 'category' && c.label.key === 'categoryCloud',
+    )
+    expect(cloud?.tabs.map((t) => t.url).sort()).toEqual([
+      'https://console.aws.amazon.com/ec2/home',
+      'https://console.cloud.google.com/compute',
+      'https://vercel.com/dashboard',
+    ])
+    // amazon.com 仍然被识别为购物
+    const shopping = result.find(
+      (c) => c.label.kind === 'category' && c.label.key === 'categoryShopping',
+    )
+    expect(shopping?.tabs.map((t) => t.url)).toEqual(['https://amazon.com/dp/B07'])
+  })
 })

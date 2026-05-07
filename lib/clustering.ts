@@ -14,6 +14,7 @@ export type CategoryKey =
   | 'categoryStorage'
   | 'categoryReading'
   | 'categoryShopping'
+  | 'categoryCloud'
   | 'categoryOther'
 
 // host → category。顺序无关,先精确匹配再向上查父域。
@@ -114,6 +115,48 @@ const DOMAIN_CATEGORY: Record<string, CategoryKey> = {
   'taobao.com': 'categoryShopping',
   'jd.com': 'categoryShopping',
   'etsy.com': 'categoryShopping',
+
+  // Cloud / 云服务 — 公有云、PaaS、Serverless、DBaaS。注意:
+  // 同根域名下不同子产品(如 amazon.com 是购物、aws.amazon.com 是云)需要精确写出。
+  'aws.amazon.com': 'categoryCloud',
+  'console.aws.amazon.com': 'categoryCloud',
+  'cloud.google.com': 'categoryCloud',
+  'console.cloud.google.com': 'categoryCloud',
+  'firebase.google.com': 'categoryCloud',
+  'console.firebase.google.com': 'categoryCloud',
+  'azure.microsoft.com': 'categoryCloud',
+  'portal.azure.com': 'categoryCloud',
+  'cloud.oracle.com': 'categoryCloud',
+  'aliyun.com': 'categoryCloud',
+  'console.aliyun.com': 'categoryCloud',
+  'cloud.tencent.com': 'categoryCloud',
+  'console.cloud.tencent.com': 'categoryCloud',
+  'huaweicloud.com': 'categoryCloud',
+  'console.huaweicloud.com': 'categoryCloud',
+  'cloudflare.com': 'categoryCloud',
+  'dash.cloudflare.com': 'categoryCloud',
+  'vercel.com': 'categoryCloud',
+  'netlify.com': 'categoryCloud',
+  'app.netlify.com': 'categoryCloud',
+  'render.com': 'categoryCloud',
+  'dashboard.render.com': 'categoryCloud',
+  'fly.io': 'categoryCloud',
+  'railway.app': 'categoryCloud',
+  'heroku.com': 'categoryCloud',
+  'dashboard.heroku.com': 'categoryCloud',
+  'digitalocean.com': 'categoryCloud',
+  'cloud.digitalocean.com': 'categoryCloud',
+  'linode.com': 'categoryCloud',
+  'cloud.linode.com': 'categoryCloud',
+  'hetzner.com': 'categoryCloud',
+  'console.hetzner.cloud': 'categoryCloud',
+  'supabase.com': 'categoryCloud',
+  'planetscale.com': 'categoryCloud',
+  'app.planetscale.com': 'categoryCloud',
+  'upstash.com': 'categoryCloud',
+  'cloud.mongodb.com': 'categoryCloud',
+  'neon.tech': 'categoryCloud',
+  'console.neon.tech': 'categoryCloud',
 }
 
 export type ClusterLabel =
