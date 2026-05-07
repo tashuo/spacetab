@@ -27,7 +27,7 @@ export function SpaceItem({
 }: Props) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(space.name)
-  const color = colorForSpace(space.id)
+  const palette = colorForSpace(space.id)
 
   const commit = () => {
     const trimmed = draft.trim()
@@ -44,82 +44,97 @@ export function SpaceItem({
   }
 
   return (
-    <div className="group relative bg-white rounded-xl border border-slate-200 p-4 transition-all duration-150 hover:border-slate-300 hover:shadow-[0_2px_4px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.06)]">
-      <div
-        className="absolute left-0 top-4 bottom-4 w-1 rounded-r-full"
-        style={{ background: color }}
-      />
-      <div className="flex items-start justify-between pl-4 gap-3">
-        <div className="flex-1 min-w-0">
-          {editing ? (
-            <input
-              autoFocus
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onBlur={commit}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') commit()
-                if (e.key === 'Escape') {
-                  setDraft(space.name)
-                  setEditing(false)
-                }
+    <div className="group/card relative bg-white rounded-xl border border-slate-200/80 transition-all duration-150 hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-[0_4px_8px_rgba(15,23,42,0.04),0_12px_32px_rgba(15,23,42,0.08)]">
+      {/* 左侧色条 */}
+      <div className={`absolute left-0 top-4 bottom-4 w-[5px] rounded-r-full ${palette.bar}`} />
+
+      <div className="pl-5 pr-4 py-4">
+        {/* 卡片头部 */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className={`w-1.5 h-1.5 rounded-full ${palette.dot} flex-shrink-0`} />
+              {editing ? (
+                <input
+                  autoFocus
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onBlur={commit}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') commit()
+                    if (e.key === 'Escape') {
+                      setDraft(space.name)
+                      setEditing(false)
+                    }
+                  }}
+                  className="flex-1 px-1.5 py-0.5 -ml-1.5 -my-0.5 text-[15px] font-semibold border border-slate-300 rounded bg-white"
+                />
+              ) : (
+                <h3 className="text-[15px] font-semibold text-slate-900 truncate tracking-tight">
+                  {space.name}
+                </h3>
+              )}
+            </div>
+            <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-500">
+              <span
+                className={`inline-flex items-center px-1.5 py-0.5 rounded-md font-mono text-[11px] ring-1 ${palette.countBg} ${palette.countText} ${palette.countRing}`}
+              >
+                {space.tabs.length}
+              </span>
+              <span>tabs</span>
+              <span className="text-slate-300">·</span>
+              <span>{relativeTime(space.updatedAt)}</span>
+            </div>
+          </div>
+          {/* 操作按钮区 */}
+          <div className="flex items-center gap-1 opacity-0 group-hover/card:opacity-100 focus-within:opacity-100 transition-opacity duration-150">
+            <button
+              onClick={() => {
+                setDraft(space.name)
+                setEditing(true)
               }}
-              className="w-full px-1.5 py-0.5 -ml-1.5 -my-0.5 text-[15px] font-semibold border border-slate-300 rounded bg-white"
-            />
-          ) : (
-            <h3 className="text-[15px] font-semibold text-slate-900 truncate">{space.name}</h3>
-          )}
-          <p className="mt-1 text-xs text-slate-500">
-            <span className="font-mono text-slate-700">{space.tabs.length}</span>
-            <span className="ml-1">tabs</span>
-            <span className="mx-1.5 text-slate-300">·</span>
-            <span>{relativeTime(space.updatedAt)}</span>
-          </p>
+              className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              title="重命名"
+              aria-label="重命名"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={onConfirmDelete}
+              className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+              title="删除"
+              aria-label="删除"
+            >
+              <Trash className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => onSwitch(space.id)}
+              className={`ml-1 px-2.5 h-7 flex items-center gap-1 rounded-md text-xs font-medium text-white ${palette.switchBg} ${palette.switchRing} active:scale-[0.98] transition-all duration-100`}
+              title="切换到此空间"
+            >
+              <span>切换</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-          <button
-            onClick={() => {
-              setDraft(space.name)
-              setEditing(true)
-            }}
-            className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-            title="重命名"
-            aria-label="重命名"
-          >
-            <Pencil className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={onConfirmDelete}
-            className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-            title="删除"
-            aria-label="删除"
-          >
-            <Trash className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => onSwitch(space.id)}
-            className="ml-1 px-2.5 h-7 flex items-center gap-1 rounded-md text-xs font-medium bg-slate-900 text-white hover:bg-slate-800 transition-colors"
-            title="切换到此空间"
-          >
-            <span>切换</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
+
+        {/* 标签列表 */}
+        {space.tabs.length > 0 && (
+          <div className="mt-3 space-y-0.5">
+            {space.tabs.map((t, i) => (
+              <SpaceTabRow
+                key={`${t.url}-${i}`}
+                tab={t}
+                otherSpaces={otherSpaces}
+                rowAccentClass={palette.rowAccent}
+                onOpen={onTabOpen}
+                onRemove={(url) => onTabRemove(space.id, url)}
+                onMove={(toId, url) => onTabMove(space.id, toId, url)}
+              />
+            ))}
+          </div>
+        )}
       </div>
-      {space.tabs.length > 0 && (
-        <div className="mt-3 pl-4 space-y-0.5">
-          {space.tabs.map((t, i) => (
-            <SpaceTabRow
-              key={`${t.url}-${i}`}
-              tab={t}
-              otherSpaces={otherSpaces}
-              onOpen={onTabOpen}
-              onRemove={(url) => onTabRemove(space.id, url)}
-              onMove={(toId, url) => onTabMove(space.id, toId, url)}
-            />
-          ))}
-        </div>
-      )}
     </div>
   )
 }
