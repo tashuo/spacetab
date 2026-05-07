@@ -25,6 +25,7 @@ interface State {
   moveTab: (fromId: string, toId: string, url: string) => Promise<boolean>
   merge: (fromId: string, toId: string) => Promise<boolean>
   duplicate: (sourceId: string, newName: string) => Promise<string | null>
+  importDb: (next: Database) => Promise<boolean>
   pushToast: (kind: ToastKind, text: string) => void
   dismissToast: (id: number) => void
 }
@@ -154,6 +155,18 @@ export const useSpaceStore = create<State>((set, get) => ({
     }
     // best-effort:合并 session 标签。失败不影响主流程。
     void mergeSessionTags(fromId, toId).catch(() => undefined)
+    return true
+  },
+
+  importDb: async (next) => {
+    const before = get().db
+    set({ db: next })
+    const result = await writeDatabase(next)
+    if (!result.ok) {
+      set({ db: before })
+      get().pushToast('error', '存储写入失败,已回滚')
+      return false
+    }
     return true
   },
 
