@@ -8,6 +8,7 @@ import {
   onTabRemovedHandler,
   onWindowRemovedHandler,
   moveLiveTabToSpace,
+  mergeSessionTags,
 } from '@/lib/vault'
 import { readSessionState } from '@/lib/session-state'
 
@@ -411,5 +412,60 @@ describe('onWindowRemovedHandler', () => {
 
     const state = await readSessionState()
     expect(state.vaultWindowId).not.toBeNull()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// mergeSessionTags
+// ---------------------------------------------------------------------------
+describe('mergeSessionTags', () => {
+  it('moves all fromId tab-ids under toId and drops fromId entry', async () => {
+    // 在两个空间各归档一些标签
+    await seedFocusedWindow([{ url: 'https://from.com/' }, { url: 'https://also-from.com/' }])
+    await archiveCurrentWindowToSpace('space-from')
+
+    // 单独给 space-to 打上另一个标签
+    await seedFocusedWindow([{ url: 'https://to.com/' }])
+    await archiveCurrentWindowToSpace('space-to')
+
+    const stateBefore = await readSessionState()
+    const fromIds = stateBefore.spaceIdToTabIds['space-from'] ?? []
+    expect(fromIds.length).toBeGreaterThan(0)
+
+    await mergeSessionTags('space-from', 'space-to')
+
+    const stateAfter = await readSessionState()
+    // from 条目消失
+    expect(stateAfter.spaceIdToTabIds['space-from']).toBeUndefined()
+    // to 包含原来 from 的所有 id
+    const toIds = stateAfter.spaceIdToTabIds['space-to'] ?? []
+    for (const id of fromIds) {
+      expect(toIds).toContain(id)
+    }
+  })
+
+  it('no-op when fromId === toId', async () => {
+    await seedFocusedWindow([{ url: 'https://same.com/' }])
+    await archiveCurrentWindowToSpace('space-same')
+
+    const stateBefore = await readSessionState()
+    await mergeSessionTags('space-same', 'space-same')
+    const stateAfter = await readSessionState()
+    expect(stateAfter).toEqual(stateBefore)
+  })
+
+  it('when source has no session entry, just drops (no error)', async () => {
+    await seedFocusedWindow([{ url: 'https://target.com/' }])
+    await archiveCurrentWindowToSpace('space-target')
+
+    const stateBefore = await readSessionState()
+    // 'space-ghost' has no session entry
+    await mergeSessionTags('space-ghost', 'space-target')
+    const stateAfter = await readSessionState()
+    // target unchanged; ghost entry simply doesn't exist to begin with
+    expect(stateAfter.spaceIdToTabIds['space-target']).toEqual(
+      stateBefore.spaceIdToTabIds['space-target'],
+    )
+    expect(stateAfter.spaceIdToTabIds['space-ghost']).toBeUndefined()
   })
 })

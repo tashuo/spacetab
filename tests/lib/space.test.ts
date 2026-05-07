@@ -6,6 +6,7 @@ import {
   deleteSpace,
   duplicateSpace,
   findSpace,
+  mergeSpaces,
   moveTab,
   removeTabFromSpace,
   renameSpace,
@@ -205,6 +206,63 @@ describe('duplicateSpace', () => {
   it('returns same reference when source not found', () => {
     const db = makeDb([makeSpace({ id: 'sp1' })])
     const next = duplicateSpace(db, 'ghost', 'sp2', 'X', 300)
+    expect(next).toBe(db)
+  })
+})
+
+describe('mergeSpaces', () => {
+  it('merges tabs from source into target with dedupe; source space removed', () => {
+    const db = makeDb([
+      makeSpace({ id: 'sp1', name: 'A', tabs: [t('https://a/'), t('https://b/')] }),
+      makeSpace({ id: 'sp2', name: 'B', tabs: [t('https://b/'), t('https://c/')] }),
+    ])
+    const next = mergeSpaces(db, 'sp1', 'sp2', 300)
+    // source space removed
+    expect(next.spaces.map((s) => s.id)).toEqual(['sp2'])
+    // target has merged tabs, deduplicated (b already in target)
+    expect(next.spaces[0]?.tabs.map((x) => x.url)).toEqual([
+      'https://b/',
+      'https://c/',
+      'https://a/',
+    ])
+  })
+
+  it('updates target updatedAt when there are new tabs', () => {
+    const db = makeDb([
+      makeSpace({ id: 'sp1', tabs: [t('https://new/')] }),
+      makeSpace({ id: 'sp2', name: 'B', tabs: [], updatedAt: 100 }),
+    ])
+    const next = mergeSpaces(db, 'sp1', 'sp2', 999)
+    expect(next.spaces[0]?.updatedAt).toBe(999)
+  })
+
+  it('target updatedAt unchanged when source has no new urls', () => {
+    const db = makeDb([
+      makeSpace({ id: 'sp1', tabs: [t('https://dup/')] }),
+      makeSpace({ id: 'sp2', name: 'B', tabs: [t('https://dup/')], updatedAt: 100 }),
+    ])
+    const next = mergeSpaces(db, 'sp1', 'sp2', 999)
+    // source still removed
+    expect(next.spaces.map((s) => s.id)).toEqual(['sp2'])
+    // appendTabs returned same ref → updatedAt untouched
+    expect(next.spaces[0]?.updatedAt).toBe(100)
+  })
+
+  it('fromId === toId returns same db reference', () => {
+    const db = makeDb([makeSpace({ id: 'sp1' })])
+    const next = mergeSpaces(db, 'sp1', 'sp1', 300)
+    expect(next).toBe(db)
+  })
+
+  it('missing fromId returns same db reference', () => {
+    const db = makeDb([makeSpace({ id: 'sp1' })])
+    const next = mergeSpaces(db, 'ghost', 'sp1', 300)
+    expect(next).toBe(db)
+  })
+
+  it('missing toId returns same db reference', () => {
+    const db = makeDb([makeSpace({ id: 'sp1' })])
+    const next = mergeSpaces(db, 'sp1', 'ghost', 300)
     expect(next).toBe(db)
   })
 })

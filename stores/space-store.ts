@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { EMPTY_DB, type Database, type Tab } from '@/lib/schema'
 import { readDatabase, writeDatabase } from '@/lib/storage'
 import * as space from '@/lib/space'
-import { purgeVaultedTabsForSpace } from '@/lib/vault'
+import { purgeVaultedTabsForSpace, mergeSessionTags } from '@/lib/vault'
 
 export type ToastKind = 'info' | 'error'
 export interface Toast {
@@ -23,6 +23,7 @@ interface State {
   remove: (id: string) => Promise<void>
   removeTab: (spaceId: string, url: string) => Promise<boolean>
   moveTab: (fromId: string, toId: string, url: string) => Promise<boolean>
+  merge: (fromId: string, toId: string) => Promise<boolean>
   duplicate: (sourceId: string, newName: string) => Promise<string | null>
   pushToast: (kind: ToastKind, text: string) => void
   dismissToast: (id: number) => void
@@ -136,6 +137,23 @@ export const useSpaceStore = create<State>((set, get) => ({
       get().pushToast('error', '存储写入失败,已回滚')
       return false
     }
+    return true
+  },
+
+  merge: async (fromId, toId) => {
+    if (fromId === toId) return false
+    const before = get().db
+    const next = space.mergeSpaces(before, fromId, toId, Date.now())
+    if (next === before) return false
+    set({ db: next })
+    const result = await writeDatabase(next)
+    if (!result.ok) {
+      set({ db: before })
+      get().pushToast('error', '存储写入失败,已回滚')
+      return false
+    }
+    // best-effort:合并 session 标签。失败不影响主流程。
+    void mergeSessionTags(fromId, toId).catch(() => undefined)
     return true
   },
 

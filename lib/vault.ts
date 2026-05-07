@@ -219,6 +219,22 @@ export async function releaseSpaceTabs(spaceId: string): Promise<void> {
 // 历史名,保留转发以避免外部破坏
 export const purgeVaultedTabsForSpace = releaseSpaceTabs
 
+// 合并空间时:把 fromId 的 session 标签 ID 移到 toId 名下。
+// 失败不阻断主流程(调用方按 best-effort 处理)。
+export async function mergeSessionTags(fromId: string, toId: string): Promise<void> {
+  if (fromId === toId) return
+  const state = await readSessionState()
+  const fromIds = state.spaceIdToTabIds[fromId]
+  if (!fromIds || fromIds.length === 0) {
+    // 源空间没有 session 标签,仅清理条目
+    await writeSessionState(dropSpaceFromState(state, fromId))
+    return
+  }
+  // tagTabIdsForSpace 内部已去重
+  const tagged = tagTabIdsForSpace(state, toId, fromIds)
+  await writeSessionState(dropSpaceFromState(tagged, fromId))
+}
+
 export async function moveLiveTabToSpace(
   tabId: number,
   toSpaceId: string,

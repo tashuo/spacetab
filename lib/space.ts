@@ -83,6 +83,27 @@ export function duplicateSpace(
   return { ...db, spaces: [...db.spaces, copy] }
 }
 
+export function mergeSpaces(
+  db: Database,
+  fromId: string,
+  toId: string,
+  now: number,
+): Database {
+  if (fromId === toId) return db
+  const from = db.spaces.find((s) => s.id === fromId)
+  const to = db.spaces.find((s) => s.id === toId)
+  if (!from || !to) return db
+
+  // 将 from 的标签追加到 to(appendTabs 内部去重)
+  const mergedTo = appendTabs(to, from.tabs, now)
+  return {
+    ...db,
+    spaces: db.spaces
+      .filter((s) => s.id !== fromId)
+      .map((s) => (s.id === toId ? mergedTo : s)),
+  }
+}
+
 export function moveTab(
   db: Database,
   fromId: string,

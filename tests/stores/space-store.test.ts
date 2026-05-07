@@ -100,6 +100,52 @@ describe('useSpaceStore.removeTab', () => {
   })
 })
 
+describe('useSpaceStore.merge', () => {
+  it('moves tabs from source into target and removes source space', async () => {
+    const id1 = await useSpaceStore.getState().archiveNew('From', [
+      { url: 'https://a/', title: 'a' },
+      { url: 'https://b/', title: 'b' },
+    ])
+    const id2 = await useSpaceStore.getState().archiveNew('To', [
+      { url: 'https://b/', title: 'b' }, // duplicate — should be deduped
+    ])
+    const ok = await useSpaceStore.getState().merge(id1!, id2!)
+    expect(ok).toBe(true)
+    const db = useSpaceStore.getState().db
+    // source removed
+    expect(db.spaces.find((s) => s.id === id1)).toBeUndefined()
+    // target has both tabs, deduplicated
+    const to = db.spaces.find((s) => s.id === id2)!
+    expect(to.tabs.map((t) => t.url)).toContain('https://a/')
+    expect(to.tabs.map((t) => t.url)).toContain('https://b/')
+    expect(to.tabs.filter((t) => t.url === 'https://b/')).toHaveLength(1)
+    const stored = await fakeBrowser.storage.local.get('db')
+    expect(stored.db).toEqual(db)
+  })
+
+  it('returns false when fromId === toId', async () => {
+    const id = await useSpaceStore.getState().archiveNew('X', [])
+    const ok = await useSpaceStore.getState().merge(id!, id!)
+    expect(ok).toBe(false)
+  })
+
+  it('rolls back on storage write failure', async () => {
+    const id1 = await useSpaceStore.getState().archiveNew('From', [
+      { url: 'https://x/', title: 'x' },
+    ])
+    const id2 = await useSpaceStore.getState().archiveNew('To', [])
+    const before = useSpaceStore.getState().db
+    const spy = vi
+      .spyOn(fakeBrowser.storage.local, 'set')
+      .mockRejectedValueOnce(new Error('quota'))
+    const ok = await useSpaceStore.getState().merge(id1!, id2!)
+    expect(ok).toBe(false)
+    expect(useSpaceStore.getState().db).toEqual(before)
+    expect(useSpaceStore.getState().toasts.some((t) => t.kind === 'error')).toBe(true)
+    spy.mockRestore()
+  })
+})
+
 describe('useSpaceStore.moveTab', () => {
   it('moves tab between two spaces and persists', async () => {
     const id1 = await useSpaceStore.getState().archiveNew('A', [
