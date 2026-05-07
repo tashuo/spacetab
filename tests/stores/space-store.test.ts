@@ -73,3 +73,62 @@ describe('write-failure rollback', () => {
     spy.mockRestore()
   })
 })
+
+describe('useSpaceStore.removeTab', () => {
+  it('removes the tab and persists', async () => {
+    const id = await useSpaceStore.getState().archiveNew('Work', [
+      { url: 'https://a/', title: 'a' },
+      { url: 'https://b/', title: 'b' },
+    ])
+    const ok = await useSpaceStore.getState().removeTab(id!, 'https://a/')
+    expect(ok).toBe(true)
+    const sp = useSpaceStore.getState().db.spaces.find((s) => s.id === id)!
+    expect(sp.tabs.map((t) => t.url)).toEqual(['https://b/'])
+    const stored = await fakeBrowser.storage.local.get('db')
+    expect(stored.db).toEqual(useSpaceStore.getState().db)
+  })
+
+  it('returns false (no write) when url does not exist', async () => {
+    const id = await useSpaceStore.getState().archiveNew('Work', [
+      { url: 'https://a/', title: 'a' },
+    ])
+    const setSpy = vi.spyOn(fakeBrowser.storage.local, 'set')
+    const ok = await useSpaceStore.getState().removeTab(id!, 'https://nope/')
+    expect(ok).toBe(false)
+    expect(setSpy).not.toHaveBeenCalled()
+    setSpy.mockRestore()
+  })
+})
+
+describe('useSpaceStore.moveTab', () => {
+  it('moves tab between two spaces and persists', async () => {
+    const id1 = await useSpaceStore.getState().archiveNew('A', [
+      { url: 'https://a/', title: 'a' },
+    ])
+    const id2 = await useSpaceStore.getState().archiveNew('B', [])
+    const ok = await useSpaceStore.getState().moveTab(id1!, id2!, 'https://a/')
+    expect(ok).toBe(true)
+    const sp1 = useSpaceStore.getState().db.spaces.find((s) => s.id === id1)!
+    const sp2 = useSpaceStore.getState().db.spaces.find((s) => s.id === id2)!
+    expect(sp1.tabs).toHaveLength(0)
+    expect(sp2.tabs.map((t) => t.url)).toEqual(['https://a/'])
+    const stored = await fakeBrowser.storage.local.get('db')
+    expect(stored.db).toEqual(useSpaceStore.getState().db)
+  })
+
+  it('rolls back on storage write failure', async () => {
+    const id1 = await useSpaceStore.getState().archiveNew('A', [
+      { url: 'https://a/', title: 'a' },
+    ])
+    const id2 = await useSpaceStore.getState().archiveNew('B', [])
+    const before = useSpaceStore.getState().db
+    const spy = vi
+      .spyOn(fakeBrowser.storage.local, 'set')
+      .mockRejectedValueOnce(new Error('quota'))
+    const ok = await useSpaceStore.getState().moveTab(id1!, id2!, 'https://a/')
+    expect(ok).toBe(false)
+    expect(useSpaceStore.getState().db).toEqual(before)
+    expect(useSpaceStore.getState().toasts.some((t) => t.kind === 'error')).toBe(true)
+    spy.mockRestore()
+  })
+})

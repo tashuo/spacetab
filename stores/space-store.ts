@@ -20,6 +20,8 @@ interface State {
   archiveNew: (name: string, tabs: Tab[]) => Promise<string | null>
   rename: (id: string, name: string) => Promise<void>
   remove: (id: string) => Promise<void>
+  removeTab: (spaceId: string, url: string) => Promise<boolean>
+  moveTab: (fromId: string, toId: string, url: string) => Promise<boolean>
   pushToast: (kind: ToastKind, text: string) => void
   dismissToast: (id: number) => void
 }
@@ -102,6 +104,34 @@ export const useSpaceStore = create<State>((set, get) => ({
       set({ db: before })
       get().pushToast('error', '存储写入失败,已回滚')
     }
+  },
+
+  removeTab: async (spaceId, url) => {
+    const before = get().db
+    const next = space.removeTabFromSpace(before, spaceId, url, Date.now())
+    if (next === before) return false
+    set({ db: next })
+    const result = await writeDatabase(next)
+    if (!result.ok) {
+      set({ db: before })
+      get().pushToast('error', '存储写入失败,已回滚')
+      return false
+    }
+    return true
+  },
+
+  moveTab: async (fromId, toId, url) => {
+    const before = get().db
+    const next = space.moveTab(before, fromId, toId, url, Date.now())
+    if (next === before) return false
+    set({ db: next })
+    const result = await writeDatabase(next)
+    if (!result.ok) {
+      set({ db: before })
+      get().pushToast('error', '存储写入失败,已回滚')
+      return false
+    }
+    return true
   },
 
   pushToast: (kind, text) => {
