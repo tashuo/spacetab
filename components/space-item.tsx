@@ -114,10 +114,10 @@ export function SpaceItem({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {/* 左侧色条 */}
-      <div className={`absolute left-0 top-4 bottom-4 w-[5px] rounded-r-full ${palette.bar}`} />
+      {/* 左侧色条(装饰,不拦事件,在把手下方)*/}
+      <div className={`absolute left-0 top-4 bottom-4 w-[5px] rounded-r-full ${palette.bar} pointer-events-none`} />
 
-      {/* 拖动整张卡片的把手(hover 卡片时显示) */}
+      {/* 拖动整张卡片的把手:左边整列垂直居中,常驻 50% 透明度,hover 加深 */}
       <div
         draggable
         onDragStart={(e) => {
@@ -127,14 +127,14 @@ export function SpaceItem({
           )
           e.dataTransfer.effectAllowed = 'move'
         }}
-        className="absolute left-1 top-3 opacity-0 group-hover/card:opacity-100 cursor-grab active:cursor-grabbing transition-opacity z-10"
+        className="group/grip absolute left-0 top-1/2 -translate-y-1/2 w-7 h-10 flex items-center justify-center rounded-md cursor-grab active:cursor-grabbing transition-all duration-150 opacity-50 hover:opacity-100 hover:bg-slate-100 z-10"
         title={t('dragHandle')}
         aria-label={t('dragHandle')}
       >
-        <GripVertical className="w-3.5 h-3.5 text-slate-400" />
+        <GripVertical className="w-4 h-4 text-slate-500 group-hover/grip:text-slate-800 transition-colors" />
       </div>
 
-      <div className="pl-5 pr-4 py-4">
+      <div className="pl-7 pr-4 py-4">
         {/* 卡片头部 */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
