@@ -12,10 +12,10 @@ interface Props {
 export function SpaceList({ spaces, onSwitch, onRename, onDelete }: Props) {
   if (spaces.length === 0) {
     return (
-      <div className="px-4 py-12 text-center">
-        <Layers className="w-8 h-8 mx-auto text-slate-300" />
-        <p className="mt-3 text-sm text-slate-500">还没空间</p>
-        <p className="mt-1 text-xs text-slate-400">点上面「归档当前窗口」创建第一个</p>
+      <div className="rounded-xl border border-dashed border-slate-300 px-6 py-16 text-center bg-slate-50/40">
+        <Layers className="w-9 h-9 mx-auto text-slate-300" />
+        <p className="mt-3 text-sm font-medium text-slate-700">还没创建空间</p>
+        <p className="mt-1 text-xs text-slate-500">点右上角「归档当前窗口」收集第一组标签</p>
       </div>
     )
   }
@@ -23,7 +23,7 @@ export function SpaceList({ spaces, onSwitch, onRename, onDelete }: Props) {
   const sorted = [...spaces].sort((a, b) => b.updatedAt - a.updatedAt)
 
   return (
-    <div className="max-h-[440px] overflow-y-auto">
+    <div className="grid grid-cols-1 gap-3">
       {sorted.map((s) => (
         <SpaceItem
           key={s.id}
