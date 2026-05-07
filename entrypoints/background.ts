@@ -1,3 +1,5 @@
+import { onTabRemovedHandler, onWindowRemovedHandler } from '@/lib/vault'
+
 export default defineBackground(() => {
   chrome.action.onClicked.addListener(async () => {
     const managerUrl = chrome.runtime.getURL('manager.html')
@@ -11,5 +13,13 @@ export default defineBackground(() => {
       return
     }
     await chrome.tabs.create({ url: managerUrl, active: true, pinned: true })
+  })
+
+  chrome.tabs.onRemoved.addListener((tabId) => {
+    void onTabRemovedHandler(tabId)
+  })
+
+  chrome.windows.onRemoved.addListener((winId) => {
+    void onWindowRemovedHandler(winId)
   })
 })
