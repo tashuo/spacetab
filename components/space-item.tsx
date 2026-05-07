@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Space } from '@/lib/schema'
+import { ArrowRight, Pencil, Trash } from './icons'
 
 interface Props {
   space: Space
@@ -27,7 +28,7 @@ export function SpaceItem({ space, onSwitch, onRename, onDelete }: Props) {
   }
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 hover:bg-slate-50">
+    <div className="flex items-center gap-2 px-3 py-2.5 border-b border-slate-100 hover:bg-slate-50">
       <div className="flex-1 min-w-0">
         {editing ? (
           <input
@@ -42,7 +43,7 @@ export function SpaceItem({ space, onSwitch, onRename, onDelete }: Props) {
                 setEditing(false)
               }
             }}
-            className="w-full px-1 py-0.5 border border-slate-300 rounded text-sm"
+            className="w-full px-1 py-0.5 border border-slate-300 rounded text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600/50"
           />
         ) : (
           <div className="truncate">
@@ -53,9 +54,11 @@ export function SpaceItem({ space, onSwitch, onRename, onDelete }: Props) {
       </div>
       <button
         onClick={() => onSwitch(space.id)}
-        className="px-2 py-1 text-xs rounded bg-slate-900 text-white hover:bg-slate-700"
+        className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-accent-600 text-white hover:bg-accent-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600/50"
         title="切换到此空间"
+        aria-label="切换到此空间"
       >
+        <ArrowRight className="w-3.5 h-3.5" />
         切换
       </button>
       <button
@@ -63,17 +66,19 @@ export function SpaceItem({ space, onSwitch, onRename, onDelete }: Props) {
           setDraft(space.name)
           setEditing(true)
         }}
-        className="px-2 py-1 text-xs rounded hover:bg-slate-200"
+        className="w-8 h-8 flex items-center justify-center rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600/50"
         title="重命名"
+        aria-label="重命名"
       >
-        ✎
+        <Pencil className="w-3.5 h-3.5" />
       </button>
       <button
         onClick={onConfirmDelete}
-        className="px-2 py-1 text-xs rounded hover:bg-red-100 hover:text-red-700"
+        className="w-8 h-8 flex items-center justify-center rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600/50"
         title="删除"
+        aria-label="删除"
       >
-        🗑
+        <Trash className="w-3.5 h-3.5" />
       </button>
     </div>
   )

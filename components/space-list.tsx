@@ -1,5 +1,6 @@
 import type { Space } from '@/lib/schema'
 import { SpaceItem } from './space-item'
+import { Layers } from './icons'
 
 interface Props {
   spaces: Space[]
@@ -11,8 +12,10 @@ interface Props {
 export function SpaceList({ spaces, onSwitch, onRename, onDelete }: Props) {
   if (spaces.length === 0) {
     return (
-      <div className="px-4 py-8 text-center text-sm text-slate-500">
-        还没空间。点上面「归档当前窗口到…」创建第一个。
+      <div className="px-4 py-12 text-center">
+        <Layers className="w-8 h-8 mx-auto text-slate-300" />
+        <p className="mt-3 text-sm text-slate-500">还没空间</p>
+        <p className="mt-1 text-xs text-slate-400">点上面「归档当前窗口」创建第一个</p>
       </div>
     )
   }
