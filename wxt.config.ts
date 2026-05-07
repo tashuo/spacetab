@@ -11,5 +11,8 @@ export default defineConfig({
     description: '基于项目空间的 Chrome 标签管理',
     version: '0.1.0',
     permissions: ['tabs', 'storage'],
+    action: {
+      default_title: 'SpaceTab',
+    },
   },
 })
