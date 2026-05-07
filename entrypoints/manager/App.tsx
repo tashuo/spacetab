@@ -1,10 +1,12 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { TopBar } from '@/components/top-bar'
 import { SpaceList } from '@/components/space-list'
 import { LiveTabsPanel } from '@/components/live-tabs-panel'
 import { ToastStack } from '@/components/toast-stack'
+import { SmartArchiveDialog } from '@/components/smart-archive-dialog'
 import { useSpaceStore } from '@/stores/space-store'
-import { archiveCurrentWindowToSpace, moveLiveTabToSpace, switchToSpace } from '@/lib/vault'
+import { archiveCurrentWindowToSpace, moveLiveTabToSpace, snapshotCurrentWindow, switchToSpace } from '@/lib/vault'
+import { clusterTabs } from '@/lib/clustering'
 import { useT } from '@/lib/i18n'
 import type { Tab } from '@/lib/schema'
 
@@ -17,6 +19,11 @@ export default function App() {
   } = useSpaceStore()
 
   const { t } = useT()
+
+  const [smartDialog, setSmartDialog] = useState<{
+    clusters: ReturnType<typeof clusterTabs>
+    total: number
+  } | null>(null)
 
   useEffect(() => {
     void load()
@@ -52,6 +59,39 @@ export default function App() {
       pushToast('info', t('toastArchivedNew', { name, n: archived.length }))
     } catch {
       pushToast('error', t('toastArchiveFailed'))
+    }
+  }
+
+  const handleSmartArchive = async () => {
+    try {
+      const tabs = await snapshotCurrentWindow()
+      if (tabs.length === 0) {
+        pushToast('info', t('toastWindowEmpty'))
+        return
+      }
+      const clusters = clusterTabs(tabs)
+      if (clusters.length === 0) {
+        pushToast('info', t('noTabsToCluster'))
+        return
+      }
+      setSmartDialog({ clusters, total: tabs.length })
+    } catch {
+      pushToast('error', t('toastArchiveFailed'))
+    }
+  }
+
+  const handleSmartArchiveConfirm = async (
+    toCreate: Array<{ name: string; tabs: Tab[] }>,
+  ) => {
+    setSmartDialog(null)
+    if (toCreate.length === 0) return
+    let created = 0
+    for (const c of toCreate) {
+      const id = await archiveNew(c.name, c.tabs)
+      if (id) created++
+    }
+    if (created > 0) {
+      pushToast('info', t('toastSmartArchived', { n: created }))
     }
   }
 
@@ -114,6 +154,7 @@ export default function App() {
         spaces={db.spaces}
         onArchiveExisting={archiveExisting}
         onArchiveNew={archiveNewName}
+        onSmartArchive={handleSmartArchive}
       />
       <main className="max-w-6xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
         <aside className="lg:col-span-4 lg:sticky lg:top-20 lg:self-start">
@@ -145,6 +186,14 @@ export default function App() {
         </section>
       </main>
       <ToastStack toasts={toasts} onDismiss={dismissToast} />
+      {smartDialog && (
+        <SmartArchiveDialog
+          initialClusters={smartDialog.clusters}
+          totalTabsCount={smartDialog.total}
+          onCancel={() => setSmartDialog(null)}
+          onConfirm={handleSmartArchiveConfirm}
+        />
+      )}
     </div>
   )
 }

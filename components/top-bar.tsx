@@ -8,6 +8,7 @@ interface Props {
   spaces: Space[]
   onArchiveExisting: (spaceId: string) => void
   onArchiveNew: (name: string) => void
+  onSmartArchive?: () => void
 }
 
 function LanguageSwitcher() {
@@ -56,7 +57,7 @@ function LanguageSwitcher() {
   )
 }
 
-export function TopBar({ spaces, onArchiveExisting, onArchiveNew }: Props) {
+export function TopBar({ spaces, onArchiveExisting, onArchiveNew, onSmartArchive }: Props) {
   const { t } = useT()
 
   return (
@@ -77,6 +78,7 @@ export function TopBar({ spaces, onArchiveExisting, onArchiveNew }: Props) {
             spaces={spaces}
             onArchiveExisting={onArchiveExisting}
             onArchiveNew={onArchiveNew}
+            {...(onSmartArchive ? { onSmartArchive } : {})}
           />
         </div>
       </div>

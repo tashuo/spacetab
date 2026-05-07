@@ -1,15 +1,16 @@
 import { useState, useRef, useEffect } from 'react'
 import type { Space } from '@/lib/schema'
 import { useT } from '@/lib/i18n'
-import { Plus } from './icons'
+import { Plus, Sparkle } from './icons'
 
 interface Props {
   spaces: Space[]
   onArchiveExisting: (spaceId: string) => void
   onArchiveNew: (name: string) => void
+  onSmartArchive?: () => void
 }
 
-export function ArchiveTrigger({ spaces, onArchiveExisting, onArchiveNew }: Props) {
+export function ArchiveTrigger({ spaces, onArchiveExisting, onArchiveNew, onSmartArchive }: Props) {
   const { t } = useT()
   const [open, setOpen] = useState(false)
   const [creating, setCreating] = useState(false)
@@ -44,6 +45,18 @@ export function ArchiveTrigger({ spaces, onArchiveExisting, onArchiveNew }: Prop
       </button>
       {open && (
         <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+          {onSmartArchive && (
+            <button
+              onClick={() => {
+                onSmartArchive()
+                close()
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-left bg-gradient-to-r from-indigo-50/40 to-violet-50/30 hover:from-indigo-50 hover:to-violet-50 transition-colors text-slate-800 border-b border-slate-100"
+            >
+              <Sparkle className="w-3.5 h-3.5 text-violet-600" />
+              <span className="font-medium">{t('smartArchive')}</span>
+            </button>
+          )}
           <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-100">
             {t('archiveTo')}
           </div>

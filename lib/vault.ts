@@ -63,6 +63,26 @@ async function filterAlive(tabIds: number[]): Promise<number[]> {
   return alive
 }
 
+// 仅快照当前窗口可归档的标签,不写入任何 session 状态。
+// 用于智能归档预览阶段,避免在用户确认前污染 vault 状态。
+export async function snapshotCurrentWindow(): Promise<Tab[]> {
+  const focusedId = await focusedWindowId()
+  const visible = await chrome.tabs.query({ windowId: focusedId, pinned: false })
+  const out: Tab[] = []
+  for (const t of visible) {
+    if (isSelfExtension(t.url)) continue
+    if (typeof t.id !== 'number') continue
+    if (!canRestore(t.url)) continue
+    const url = t.url!
+    out.push({
+      url,
+      title: t.title && t.title.length > 0 ? t.title : url,
+      ...(t.favIconUrl ? { favIconUrl: t.favIconUrl } : {}),
+    })
+  }
+  return out
+}
+
 export async function archiveCurrentWindowToSpace(
   spaceId: string,
 ): Promise<{ archived: Tab[]; closedNonRestorable: number }> {
