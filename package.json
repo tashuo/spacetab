@@ -15,9 +15,11 @@
     "postinstall": "wxt prepare"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.2.4",
     "@types/react": "^18.3.28",
     "@types/react-dom": "^18.3.7",
     "@wxt-dev/module-react": "^1.1.5",
+    "tailwindcss": "^4.2.4",
     "typescript": "^5.9.3",
     "wxt": "^0.20.25"
   },
