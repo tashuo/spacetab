@@ -94,17 +94,21 @@ export function colorForSpace(id: string): SpacePalette {
   return PALETTE[KEYS[Math.abs(h) % KEYS.length]!]
 }
 
-export function relativeTime(ts: number, now: number = Date.now()): string {
+export function relativeTime(
+  ts: number,
+  t: (key: string, params?: Record<string, string | number>) => string,
+  now: number = Date.now(),
+): string {
   const diff = Math.max(0, now - ts)
   const min = Math.floor(diff / 60_000)
   const hr = Math.floor(diff / 3_600_000)
   const day = Math.floor(diff / 86_400_000)
-  if (min < 1) return '刚刚'
-  if (min < 60) return `${min} 分钟前`
-  if (hr < 24) return `${hr} 小时前`
-  if (day === 1) return '昨天'
-  if (day < 7) return `${day} 天前`
-  if (day < 30) return `${Math.floor(day / 7)} 周前`
-  if (day < 365) return `${Math.floor(day / 30)} 个月前`
-  return `${Math.floor(day / 365)} 年前`
+  if (min < 1) return t('timeJustNow')
+  if (min < 60) return t('timeMinutesAgo', { n: min })
+  if (hr < 24) return t('timeHoursAgo', { n: hr })
+  if (day === 1) return t('timeYesterday')
+  if (day < 7) return t('timeDaysAgo', { n: day })
+  if (day < 30) return t('timeWeeksAgo', { n: Math.floor(day / 7) })
+  if (day < 365) return t('timeMonthsAgo', { n: Math.floor(day / 30) })
+  return t('timeYearsAgo', { n: Math.floor(day / 365) })
 }

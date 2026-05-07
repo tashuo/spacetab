@@ -12,6 +12,10 @@ const VALID_HEXES = [
 
 const VALID_KEYS = ['indigo', 'emerald', 'amber', 'pink', 'violet', 'cyan']
 
+// t スタブ: キーとパラメータをそのまま文字列化して返す
+const t = (key: string, params?: Record<string, string | number>) =>
+  params ? `${key}:${JSON.stringify(params)}` : key
+
 describe('colorForSpace', () => {
   it('returns a palette whose hex is one of the 6 predefined values', () => {
     const ids = ['abc', 'xyz', '123', 'space-1', 'space-2', 'hello', 'world']
@@ -63,53 +67,52 @@ describe('colorForSpace', () => {
 describe('relativeTime', () => {
   const NOW = 1_700_000_000_000 // fixed reference point
 
-  it('returns 刚刚 for diff < 1 min', () => {
-    expect(relativeTime(NOW - 30_000, NOW)).toBe('刚刚')
-    expect(relativeTime(NOW - 59_999, NOW)).toBe('刚刚')
-    expect(relativeTime(NOW, NOW)).toBe('刚刚')
+  it('returns timeJustNow for diff < 1 min', () => {
+    expect(relativeTime(NOW - 30_000, t, NOW)).toBe('timeJustNow')
+    expect(relativeTime(NOW - 59_999, t, NOW)).toBe('timeJustNow')
+    expect(relativeTime(NOW, t, NOW)).toBe('timeJustNow')
   })
 
-  it('returns N 分钟前 for 1–59 min', () => {
-    expect(relativeTime(NOW - 60_000, NOW)).toBe('1 分钟前')
-    expect(relativeTime(NOW - 5 * 60_000, NOW)).toBe('5 分钟前')
-    expect(relativeTime(NOW - 59 * 60_000, NOW)).toBe('59 分钟前')
+  it('returns timeMinutesAgo for 1–59 min', () => {
+    expect(relativeTime(NOW - 60_000, t, NOW)).toBe('timeMinutesAgo:{"n":1}')
+    expect(relativeTime(NOW - 5 * 60_000, t, NOW)).toBe('timeMinutesAgo:{"n":5}')
+    expect(relativeTime(NOW - 59 * 60_000, t, NOW)).toBe('timeMinutesAgo:{"n":59}')
   })
 
-  it('returns N 小时前 for 1–23 hours', () => {
-    expect(relativeTime(NOW - 3_600_000, NOW)).toBe('1 小时前')
-    expect(relativeTime(NOW - 3 * 3_600_000, NOW)).toBe('3 小时前')
-    expect(relativeTime(NOW - 23 * 3_600_000, NOW)).toBe('23 小时前')
+  it('returns timeHoursAgo for 1–23 hours', () => {
+    expect(relativeTime(NOW - 3_600_000, t, NOW)).toBe('timeHoursAgo:{"n":1}')
+    expect(relativeTime(NOW - 3 * 3_600_000, t, NOW)).toBe('timeHoursAgo:{"n":3}')
+    expect(relativeTime(NOW - 23 * 3_600_000, t, NOW)).toBe('timeHoursAgo:{"n":23}')
   })
 
-  it('returns 昨天 for exactly 1 day', () => {
-    expect(relativeTime(NOW - 86_400_000, NOW)).toBe('昨天')
-    // 1.5 days is still day === 1 only if floor is 1
-    expect(relativeTime(NOW - 1.5 * 86_400_000, NOW)).toBe('昨天')
+  it('returns timeYesterday for exactly 1 day', () => {
+    expect(relativeTime(NOW - 86_400_000, t, NOW)).toBe('timeYesterday')
+    expect(relativeTime(NOW - 1.5 * 86_400_000, t, NOW)).toBe('timeYesterday')
   })
 
-  it('returns N 天前 for 2–6 days', () => {
-    expect(relativeTime(NOW - 2 * 86_400_000, NOW)).toBe('2 天前')
-    expect(relativeTime(NOW - 6 * 86_400_000, NOW)).toBe('6 天前')
+  it('returns timeDaysAgo for 2–6 days', () => {
+    expect(relativeTime(NOW - 2 * 86_400_000, t, NOW)).toBe('timeDaysAgo:{"n":2}')
+    expect(relativeTime(NOW - 6 * 86_400_000, t, NOW)).toBe('timeDaysAgo:{"n":6}')
   })
 
-  it('returns N 周前 for 7–29 days', () => {
-    expect(relativeTime(NOW - 7 * 86_400_000, NOW)).toBe('1 周前')
-    expect(relativeTime(NOW - 14 * 86_400_000, NOW)).toBe('2 周前')
-    expect(relativeTime(NOW - 29 * 86_400_000, NOW)).toBe('4 周前')
+  it('returns timeWeeksAgo for 7–29 days', () => {
+    expect(relativeTime(NOW - 7 * 86_400_000, t, NOW)).toBe('timeWeeksAgo:{"n":1}')
+    expect(relativeTime(NOW - 14 * 86_400_000, t, NOW)).toBe('timeWeeksAgo:{"n":2}')
+    expect(relativeTime(NOW - 29 * 86_400_000, t, NOW)).toBe('timeWeeksAgo:{"n":4}')
   })
 
-  it('returns N 个月前 for 30–364 days', () => {
-    expect(relativeTime(NOW - 30 * 86_400_000, NOW)).toBe('1 个月前')
-    expect(relativeTime(NOW - 90 * 86_400_000, NOW)).toBe('3 个月前')
-    expect(relativeTime(NOW - 364 * 86_400_000, NOW)).toBe('12 个月前')
+  it('returns timeMonthsAgo for 30–364 days', () => {
+    expect(relativeTime(NOW - 30 * 86_400_000, t, NOW)).toBe('timeMonthsAgo:{"n":1}')
+    expect(relativeTime(NOW - 90 * 86_400_000, t, NOW)).toBe('timeMonthsAgo:{"n":3}')
+    expect(relativeTime(NOW - 364 * 86_400_000, t, NOW)).toBe('timeMonthsAgo:{"n":12}')
   })
 
-  it('returns N 年前 for 365+ days', () => {
-    expect(relativeTime(NOW - 365 * 86_400_000, NOW)).toBe('1 年前')
-    expect(relativeTime(NOW - 730 * 86_400_000, NOW)).toBe('2 年前')
+  it('returns timeYearsAgo for 365+ days', () => {
+    expect(relativeTime(NOW - 365 * 86_400_000, t, NOW)).toBe('timeYearsAgo:{"n":1}')
+    expect(relativeTime(NOW - 730 * 86_400_000, t, NOW)).toBe('timeYearsAgo:{"n":2}')
   })
 
   it('handles future timestamps (diff = 0)', () => {
-    expect(relativeTime(NOW + 60_000, NOW)).toBe('刚刚')
+    expect(relativeTime(NOW + 60_000, t, NOW)).toBe('timeJustNow')
   })
 })

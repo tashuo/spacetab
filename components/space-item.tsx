@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Space } from '@/lib/schema'
 import { colorForSpace, relativeTime } from '@/lib/ui-utils'
+import { useT } from '@/lib/i18n'
 import { ArrowRight, Pencil, Trash } from './icons'
 import { SpaceTabRow } from './space-tab-row'
 
@@ -25,6 +26,7 @@ export function SpaceItem({
   onTabRemove,
   onTabMove,
 }: Props) {
+  const { t } = useT()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(space.name)
   const palette = colorForSpace(space.id)
@@ -83,7 +85,7 @@ export function SpaceItem({
               </span>
               <span>tabs</span>
               <span className="text-slate-300">·</span>
-              <span>{relativeTime(space.updatedAt)}</span>
+              <span>{relativeTime(space.updatedAt, t)}</span>
             </div>
           </div>
           {/* 操作按钮区 */}
