@@ -45,11 +45,23 @@ export default function App() {
     }
   }
 
-  const archiveNewName = async (name: string) => {
+  const archiveNewName = async (rawName: string) => {
     try {
-      // 先创建空空间拿到 id,再归档窗口标签到 vault 并更新 db
-      const tempTabs: Tab[] = []
-      const id = await archiveNew(name, tempTabs)
+      const name = rawName.trim()
+      if (name.length === 0) return
+      // 自动合并:同名空间已存在则追加进去,toast 走"已归档";否则新建
+      const existing = db.spaces.find((s) => s.name === name)
+      if (existing) {
+        const { archived } = await archiveCurrentWindowToSpace(existing.id)
+        if (archived.length === 0) {
+          pushToast('info', t('toastWindowEmpty'))
+          return
+        }
+        const ok = await archive(existing.id, archived)
+        if (ok) pushToast('info', t('toastArchived', { n: archived.length, name }))
+        return
+      }
+      const id = await archiveNew(name, [])
       if (!id) return
       const { archived } = await archiveCurrentWindowToSpace(id)
       if (archived.length > 0) {
@@ -85,13 +97,30 @@ export default function App() {
   ) => {
     setSmartDialog(null)
     if (toCreate.length === 0) return
-    let created = 0
-    for (const c of toCreate) {
-      const id = await archiveNew(c.name, c.tabs)
-      if (id) created++
+    // 同名自动合并。预先索引已有空间;循环里新建的也加进索引,
+    // 这样两组同名 cluster 也只产生一个空间。
+    const nameToId = new Map<string, string>()
+    for (const s of db.spaces) {
+      if (!nameToId.has(s.name)) nameToId.set(s.name, s.id)
     }
-    if (created > 0) {
-      pushToast('info', t('toastSmartArchived', { n: created }))
+    let processed = 0
+    for (const c of toCreate) {
+      const name = c.name.trim()
+      if (name.length === 0) continue
+      const existingId = nameToId.get(name)
+      if (existingId) {
+        const ok = await archive(existingId, c.tabs)
+        if (ok) processed++
+      } else {
+        const newId = await archiveNew(name, c.tabs)
+        if (newId) {
+          processed++
+          nameToId.set(name, newId)
+        }
+      }
+    }
+    if (processed > 0) {
+      pushToast('info', t('toastSmartArchived', { n: processed }))
     }
   }
 
