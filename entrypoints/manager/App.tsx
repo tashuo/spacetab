@@ -4,11 +4,8 @@ import { SpaceList } from '@/components/space-list'
 import { LiveTabsPanel } from '@/components/live-tabs-panel'
 import { ToastStack } from '@/components/toast-stack'
 import { useSpaceStore } from '@/stores/space-store'
-import {
-  snapshotFocusedWindow,
-  closeFocusedWindowTabs,
-  replaceFocusedWindowTabs,
-} from '@/lib/tabs'
+import { archiveCurrentWindowToSpace, switchToSpace } from '@/lib/vault'
+import type { Tab } from '@/lib/schema'
 
 export default function App() {
   const {
@@ -24,17 +21,15 @@ export default function App() {
 
   const archiveExisting = async (spaceId: string) => {
     try {
-      const tabs = await snapshotFocusedWindow()
-      if (tabs.length === 0) {
+      const { archived } = await archiveCurrentWindowToSpace(spaceId)
+      if (archived.length === 0) {
         pushToast('info', '当前窗口没有可归档的标签')
         return
       }
-      const ok = await archive(spaceId, tabs)
-      if (ok) {
-        await closeFocusedWindowTabs()
-        const name = db.spaces.find((s) => s.id === spaceId)?.name ?? '空间'
-        pushToast('info', `已归档 ${tabs.length} 个标签到「${name}」`)
-      }
+      const ok = await archive(spaceId, archived)
+      if (!ok) return
+      const name = db.spaces.find((s) => s.id === spaceId)?.name ?? '空间'
+      pushToast('info', `已归档 ${archived.length} 个标签到「${name}」`)
     } catch {
       pushToast('error', '归档失败,请重试')
     }
@@ -42,12 +37,16 @@ export default function App() {
 
   const archiveNewName = async (name: string) => {
     try {
-      const tabs = await snapshotFocusedWindow()
-      const id = await archiveNew(name, tabs)
-      if (id) {
-        await closeFocusedWindowTabs()
-        pushToast('info', `已创建「${name}」并归档 ${tabs.length} 个标签`)
+      // 先创建空空间拿到 id,再归档窗口标签到 vault 并更新 db
+      const tempTabs: Tab[] = []
+      const id = await archiveNew(name, tempTabs)
+      if (!id) return
+      const { archived } = await archiveCurrentWindowToSpace(id)
+      if (archived.length > 0) {
+        const ok = await archive(id, archived)
+        if (!ok) return
       }
+      pushToast('info', `已创建「${name}」并归档 ${archived.length} 个标签`)
     } catch {
       pushToast('error', '归档失败,请重试')
     }
@@ -64,7 +63,7 @@ export default function App() {
       return
     }
     try {
-      const result = await replaceFocusedWindowTabs(target.tabs)
+      const result = await switchToSpace(id, target.tabs)
       if (result.failed.length > 0) {
         pushToast('error', `${result.failed.length} 个标签无法恢复`)
       } else {

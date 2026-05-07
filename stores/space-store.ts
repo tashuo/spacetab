@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { EMPTY_DB, type Database, type Tab } from '@/lib/schema'
 import { readDatabase, writeDatabase } from '@/lib/storage'
 import * as space from '@/lib/space'
+import { purgeVaultedTabsForSpace } from '@/lib/vault'
 
 export type ToastKind = 'info' | 'error'
 export interface Toast {
@@ -103,7 +104,10 @@ export const useSpaceStore = create<State>((set, get) => ({
     if (!result.ok) {
       set({ db: before })
       get().pushToast('error', '存储写入失败,已回滚')
+      return
     }
+    // 尽力关闭 vault 中该空间的标签,失败不影响主流程
+    void purgeVaultedTabsForSpace(id).catch(() => undefined)
   },
 
   removeTab: async (spaceId, url) => {
