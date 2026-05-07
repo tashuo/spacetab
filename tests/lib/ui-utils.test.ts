@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { colorForSpace, relativeTime } from '@/lib/ui-utils'
 
-const VALID_COLORS = [
+const VALID_HEXES = [
   '#6366F1',
   '#10B981',
   '#F59E0B',
@@ -10,30 +10,53 @@ const VALID_COLORS = [
   '#06B6D4',
 ]
 
+const VALID_KEYS = ['indigo', 'emerald', 'amber', 'pink', 'violet', 'cyan']
+
 describe('colorForSpace', () => {
-  it('returns one of the 6 predefined colors', () => {
+  it('returns a palette whose hex is one of the 6 predefined values', () => {
     const ids = ['abc', 'xyz', '123', 'space-1', 'space-2', 'hello', 'world']
     for (const id of ids) {
-      expect(VALID_COLORS).toContain(colorForSpace(id))
+      expect(VALID_HEXES).toContain(colorForSpace(id).hex)
     }
   })
 
-  it('is deterministic: same id always returns same color', () => {
+  it('returns a palette whose key is one of the 6 predefined keys', () => {
+    const ids = ['abc', 'xyz', '123', 'space-1', 'space-2', 'hello', 'world']
+    for (const id of ids) {
+      expect(VALID_KEYS).toContain(colorForSpace(id).key)
+    }
+  })
+
+  it('is deterministic: same id always returns same key', () => {
     const id = 'my-space-id'
     const first = colorForSpace(id)
     for (let i = 0; i < 10; i++) {
-      expect(colorForSpace(id)).toBe(first)
+      expect(colorForSpace(id).key).toBe(first.key)
     }
   })
 
   it('handles empty string', () => {
-    expect(VALID_COLORS).toContain(colorForSpace(''))
+    const result = colorForSpace('')
+    expect(VALID_HEXES).toContain(result.hex)
+    expect(VALID_KEYS).toContain(result.key)
   })
 
-  it('different ids produce at least 2 different colors across 20 samples', () => {
+  it('different ids produce at least 3 distinct keys across 20 samples', () => {
     const ids = Array.from({ length: 20 }, (_, i) => `space-${i}`)
-    const colors = new Set(ids.map(colorForSpace))
-    expect(colors.size).toBeGreaterThanOrEqual(2)
+    const keys = new Set(ids.map((id) => colorForSpace(id).key))
+    expect(keys.size).toBeGreaterThanOrEqual(3)
+  })
+
+  it('palette has required Tailwind class fields', () => {
+    const palette = colorForSpace('test-space')
+    expect(palette.bar).toMatch(/^bg-/)
+    expect(palette.dot).toMatch(/^bg-/)
+    expect(palette.countBg).toMatch(/^bg-/)
+    expect(palette.countText).toMatch(/^text-/)
+    expect(palette.countRing).toMatch(/^ring-/)
+    expect(palette.switchBg).toMatch(/^bg-/)
+    expect(palette.switchRing).toMatch(/^focus-visible:ring-/)
+    expect(palette.rowAccent).toMatch(/^group-hover\/row:border-/)
   })
 })
 
