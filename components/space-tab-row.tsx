@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import type { Tab, Space } from '@/lib/schema'
+import { useT } from '@/lib/i18n'
 import { ArrowRight, Trash } from './icons'
 
 interface Props {
@@ -20,6 +21,7 @@ export function SpaceTabRow({
   onRemove,
   onMove,
 }: Props) {
+  const { t } = useT()
   const [moveOpen, setMoveOpen] = useState(false)
   const [menuPos, setMenuPos] = useState<{ top: number; right: number }>({ top: 0, right: 0 })
   const [favFailed, setFavFailed] = useState(false)
@@ -98,8 +100,8 @@ export function SpaceTabRow({
               else openMenu()
             }}
             className="w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-            title="移到其他空间"
-            aria-label="移到其他空间"
+            title={t('moveToOtherSpace')}
+            aria-label={t('moveToOtherSpace')}
           >
             <ArrowRight className="w-3 h-3" />
           </button>
@@ -110,8 +112,8 @@ export function SpaceTabRow({
             onRemove(tab.url)
           }}
           className="w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-          title="从空间删除"
-          aria-label="从空间删除"
+          title={t('removeFromSpace')}
+          aria-label={t('removeFromSpace')}
         >
           <Trash className="w-3 h-3" />
         </button>
@@ -125,7 +127,7 @@ export function SpaceTabRow({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-100">
-              移到…
+              {t('moveTo')}
             </div>
             <div className="max-h-56 overflow-y-auto">
               {otherSpaces.map((s) => (

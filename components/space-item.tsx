@@ -40,7 +40,7 @@ export function SpaceItem({
 
   const onConfirmDelete = () => {
     const ok = window.confirm(
-      `删除空间「${space.name}」?其中 ${space.tabs.length} 个标签会一起丢失。`,
+      t('confirmDelete', { name: space.name, n: space.tabs.length }),
     )
     if (ok) onDelete(space.id)
   }
@@ -83,7 +83,7 @@ export function SpaceItem({
               >
                 {space.tabs.length}
               </span>
-              <span>tabs</span>
+              <span>{t('tabsLabel')}</span>
               <span className="text-slate-300">·</span>
               <span>{relativeTime(space.updatedAt, t)}</span>
             </div>
@@ -96,25 +96,25 @@ export function SpaceItem({
                 setEditing(true)
               }}
               className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-              title="重命名"
-              aria-label="重命名"
+              title={t('rename')}
+              aria-label={t('rename')}
             >
               <Pencil className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={onConfirmDelete}
               className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-              title="删除"
-              aria-label="删除"
+              title={t('delete')}
+              aria-label={t('delete')}
             >
               <Trash className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => onSwitch(space.id)}
               className={`ml-1 px-2.5 h-7 flex items-center gap-1 rounded-md text-xs font-medium text-white ${palette.switchBg} ${palette.switchRing} active:scale-[0.98] transition-all duration-100`}
-              title="切换到此空间"
+              title={t('switchToSpaceTitle')}
             >
-              <span>切换</span>
+              <span>{t('switchAction')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -123,10 +123,10 @@ export function SpaceItem({
         {/* 标签列表 */}
         {space.tabs.length > 0 && (
           <div className="mt-3 space-y-0.5">
-            {space.tabs.map((t, i) => (
+            {space.tabs.map((tab, i) => (
               <SpaceTabRow
-                key={`${t.url}-${i}`}
-                tab={t}
+                key={`${tab.url}-${i}`}
+                tab={tab}
                 otherSpaces={otherSpaces}
                 rowAccentClass={palette.rowAccent}
                 onOpen={onTabOpen}

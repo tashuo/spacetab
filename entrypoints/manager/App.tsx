@@ -5,6 +5,7 @@ import { LiveTabsPanel } from '@/components/live-tabs-panel'
 import { ToastStack } from '@/components/toast-stack'
 import { useSpaceStore } from '@/stores/space-store'
 import { archiveCurrentWindowToSpace, moveLiveTabToSpace, switchToSpace } from '@/lib/vault'
+import { useT } from '@/lib/i18n'
 import type { Tab } from '@/lib/schema'
 
 export default function App() {
@@ -15,6 +16,8 @@ export default function App() {
     dismissToast, pushToast,
   } = useSpaceStore()
 
+  const { t } = useT()
+
   useEffect(() => {
     void load()
   }, [load])
@@ -23,15 +26,15 @@ export default function App() {
     try {
       const { archived } = await archiveCurrentWindowToSpace(spaceId)
       if (archived.length === 0) {
-        pushToast('info', '当前窗口没有可归档的标签')
+        pushToast('info', t('toastWindowEmpty'))
         return
       }
       const ok = await archive(spaceId, archived)
       if (!ok) return
-      const name = db.spaces.find((s) => s.id === spaceId)?.name ?? '空间'
-      pushToast('info', `已归档 ${archived.length} 个标签到「${name}」`)
+      const name = db.spaces.find((s) => s.id === spaceId)?.name ?? ''
+      pushToast('info', t('toastArchived', { n: archived.length, name }))
     } catch {
-      pushToast('error', '归档失败,请重试')
+      pushToast('error', t('toastArchiveFailed'))
     }
   }
 
@@ -46,9 +49,9 @@ export default function App() {
         const ok = await archive(id, archived)
         if (!ok) return
       }
-      pushToast('info', `已创建「${name}」并归档 ${archived.length} 个标签`)
+      pushToast('info', t('toastArchivedNew', { name, n: archived.length }))
     } catch {
-      pushToast('error', '归档失败,请重试')
+      pushToast('error', t('toastArchiveFailed'))
     }
   }
 
@@ -60,33 +63,33 @@ export default function App() {
     try {
       const { tab } = await moveLiveTabToSpace(tabId, toSpaceId)
       if (!tab) {
-        pushToast('error', '无法移动该标签')
+        pushToast('error', t('toastCannotMove'))
         return
       }
       // 仅追加到目标空间,不修改原空间(URL 可同时属于多个空间)
       await archive(toSpaceId, [tab])
-      const name = db.spaces.find((s) => s.id === toSpaceId)?.name ?? '空间'
-      pushToast('info', `已加入「${name}」`)
+      const name = db.spaces.find((s) => s.id === toSpaceId)?.name ?? ''
+      pushToast('info', t('toastAddedTo', { name }))
     } catch {
-      pushToast('error', '移动失败,请重试')
+      pushToast('error', t('toastMoveFailed'))
     }
   }
 
   const switchTo = async (id: string) => {
     const target = db.spaces.find((s) => s.id === id)
     if (!target) {
-      pushToast('error', '空间已不存在')
+      pushToast('error', t('toastSpaceMissing'))
       return
     }
     try {
       const result = await switchToSpace(id, target.tabs)
       if (result.failed.length > 0) {
-        pushToast('error', `${result.failed.length} 个标签无法恢复`)
+        pushToast('error', t('toastFailedTabs', { n: result.failed.length }))
       } else {
-        pushToast('info', `已切换到「${target.name}」`)
+        pushToast('info', t('toastSwitched', { name: target.name }))
       }
     } catch {
-      pushToast('error', '切换失败,请重试')
+      pushToast('error', t('toastSwitchFailed'))
     }
   }
 
@@ -104,7 +107,7 @@ export default function App() {
         <section className="lg:col-span-8">
           <div className="mb-3 px-1 flex items-baseline justify-between">
             <h2 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-              我的空间
+              {t('mySpaces')}
             </h2>
             <span className="text-[11px] font-mono text-slate-400">{db.spaces.length}</span>
           </div>
@@ -120,7 +123,7 @@ export default function App() {
             />
           ) : (
             <div className="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center text-sm text-slate-400">
-              加载中…
+              {t('loading')}
             </div>
           )}
         </section>

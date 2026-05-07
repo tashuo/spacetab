@@ -1,5 +1,6 @@
 import { ArchiveTrigger } from './archive-trigger'
 import { Layers } from './icons'
+import { useT } from '@/lib/i18n'
 import type { Space } from '@/lib/schema'
 
 interface Props {
@@ -9,6 +10,8 @@ interface Props {
 }
 
 export function TopBar({ spaces, onArchiveExisting, onArchiveNew }: Props) {
+  const { t } = useT()
+
   return (
     <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-md border-b border-slate-200/60">
       <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
@@ -18,7 +21,7 @@ export function TopBar({ spaces, onArchiveExisting, onArchiveNew }: Props) {
           </div>
           <div className="leading-tight">
             <h1 className="text-[15px] font-semibold tracking-tight text-slate-900">SpaceTab</h1>
-            <p className="text-[11px] text-slate-500 font-mono">{spaces.length} 个空间</p>
+            <p className="text-[11px] text-slate-500 font-mono">{t('spacesCount', { n: spaces.length })}</p>
           </div>
         </div>
         <ArchiveTrigger

@@ -1,6 +1,7 @@
 import { useLiveTabs } from '@/hooks/use-live-tabs'
 import { activateTab, closeTab, type LiveTab } from '@/lib/live-tabs'
 import type { Space } from '@/lib/schema'
+import { useT } from '@/lib/i18n'
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Pin, X, ArrowRight } from './icons'
@@ -11,21 +12,22 @@ interface PanelProps {
 }
 
 export function LiveTabsPanel({ spaces, onMoveToSpace }: PanelProps) {
+  const { t } = useT()
   const tabs = useLiveTabs()
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-visible">
       <div className="px-4 py-3 border-b border-slate-100 flex items-baseline justify-between">
         <h2 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-          当前窗口
+          {t('currentWindow')}
         </h2>
         <span className="text-[11px] font-mono text-slate-400">{tabs.length}</span>
       </div>
       {tabs.length === 0 ? (
-        <div className="px-4 py-8 text-center text-xs text-slate-400">没有其他标签</div>
+        <div className="px-4 py-8 text-center text-xs text-slate-400">{t('emptyLiveTabs')}</div>
       ) : (
         <ul className="max-h-[calc(100vh-160px)] overflow-y-auto">
-          {tabs.map((t) => (
-            <LiveTabRow key={t.id} tab={t} spaces={spaces} onMoveToSpace={onMoveToSpace} />
+          {tabs.map((tab) => (
+            <LiveTabRow key={tab.id} tab={tab} spaces={spaces} onMoveToSpace={onMoveToSpace} />
           ))}
         </ul>
       )}
@@ -40,6 +42,7 @@ interface RowProps {
 }
 
 function LiveTabRow({ tab, spaces, onMoveToSpace }: RowProps) {
+  const { t } = useT()
   const [failed, setFailed] = useState(false)
   const [moveOpen, setMoveOpen] = useState(false)
   const [menuPos, setMenuPos] = useState<{ top: number; right: number }>({ top: 0, right: 0 })
@@ -109,8 +112,8 @@ function LiveTabRow({ tab, spaces, onMoveToSpace }: RowProps) {
               else openMenu()
             }}
             className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-opacity duration-150"
-            title="移到空间"
-            aria-label="移到空间"
+            title={t('moveToSpaceLive')}
+            aria-label={t('moveToSpaceLive')}
           >
             <ArrowRight className="w-3 h-3" />
           </button>
@@ -122,8 +125,8 @@ function LiveTabRow({ tab, spaces, onMoveToSpace }: RowProps) {
               void closeTab(tab.id)
             }}
             className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-opacity duration-150"
-            title="关闭标签"
-            aria-label="关闭标签"
+            title={t('closeTab')}
+            aria-label={t('closeTab')}
           >
             <X className="w-3 h-3" />
           </button>
@@ -138,7 +141,7 @@ function LiveTabRow({ tab, spaces, onMoveToSpace }: RowProps) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-100">
-              移到…
+              {t('moveTo')}
             </div>
             <div className="max-h-56 overflow-y-auto">
               {spaces.map((s) => (
