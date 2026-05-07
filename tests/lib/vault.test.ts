@@ -7,6 +7,7 @@ import {
   purgeVaultedTabsForSpace,
   onTabRemovedHandler,
   onWindowRemovedHandler,
+  moveLiveTabToSpace,
 } from '@/lib/vault'
 import { readSessionState } from '@/lib/session-state'
 
@@ -237,6 +238,112 @@ describe('purgeVaultedTabsForSpace', () => {
     await purgeVaultedTabsForSpace('nonexistent-space')
     const state = await readSessionState()
     expect(state.spaceIdToTabIds['nonexistent-space']).toBeUndefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// moveLiveTabToSpace
+// ---------------------------------------------------------------------------
+describe('moveLiveTabToSpace', () => {
+  it('moves an ambient (untagged) tab to a space — returns tab payload with fromSpaceId null', async () => {
+    await seedFocusedWindow([{ url: 'https://ambient.com/' }])
+    const focusedTabs = await fakeBrowser.tabs.query({ windowId: FOCUSED_WIN })
+    const tabId = focusedTabs.find((t: chrome.tabs.Tab) => t.url === 'https://ambient.com/')!.id!
+
+    const { tab, fromSpaceId } = await moveLiveTabToSpace(tabId, 'space-X')
+
+    expect(tab).not.toBeNull()
+    expect(tab!.url).toBe('https://ambient.com/')
+    expect(fromSpaceId).toBeNull()
+
+    const state = await readSessionState()
+    expect(state.spaceIdToTabIds['space-X']).toContain(tabId)
+  })
+
+  it('re-tags a tab from space A to space B — fromSpaceId is A, session moves the id', async () => {
+    await seedFocusedWindow([{ url: 'https://retag.com/' }])
+    await archiveCurrentWindowToSpace('space-A')
+
+    const stateAfterArchive = await readSessionState()
+    const vaultId = stateAfterArchive.vaultWindowId!
+    const vaultedTabs = await fakeBrowser.tabs.query({ windowId: vaultId })
+    const tabId = vaultedTabs.find((t: chrome.tabs.Tab) => t.url === 'https://retag.com/')!.id!
+
+    // Bring the tab back into the focused window so moveLiveTabToSpace can get it
+    await fakeBrowser.tabs.update(tabId, { windowId: FOCUSED_WIN })
+
+    const { tab, fromSpaceId } = await moveLiveTabToSpace(tabId, 'space-B')
+
+    expect(tab).not.toBeNull()
+    expect(fromSpaceId).toBe('space-A')
+
+    const state = await readSessionState()
+    // A should no longer contain tabId
+    expect(state.spaceIdToTabIds['space-A'] ?? []).not.toContain(tabId)
+    // B should contain tabId
+    expect(state.spaceIdToTabIds['space-B']).toContain(tabId)
+  })
+
+  it('rejects a pinned tab — returns null tab and null fromSpaceId, state unchanged', async () => {
+    await seedFocusedWindow([{ url: 'https://pinned.com/', pinned: true }])
+    const focusedTabs = await fakeBrowser.tabs.query({ windowId: FOCUSED_WIN })
+    const tabId = focusedTabs.find((t: chrome.tabs.Tab) => t.url === 'https://pinned.com/')!.id!
+
+    const stateBefore = await readSessionState()
+    const { tab, fromSpaceId } = await moveLiveTabToSpace(tabId, 'space-X')
+
+    expect(tab).toBeNull()
+    expect(fromSpaceId).toBeNull()
+    const stateAfter = await readSessionState()
+    expect(stateAfter).toEqual(stateBefore)
+  })
+
+  it('rejects a non-restorable URL (chrome://) — returns null tab, state unchanged', async () => {
+    await seedFocusedWindow([{ url: 'chrome://settings/' }])
+    const focusedTabs = await fakeBrowser.tabs.query({ windowId: FOCUSED_WIN })
+    const tabId = focusedTabs.find((t: chrome.tabs.Tab) => t.url === 'chrome://settings/')!.id!
+
+    const stateBefore = await readSessionState()
+    const { tab, fromSpaceId } = await moveLiveTabToSpace(tabId, 'space-X')
+
+    expect(tab).toBeNull()
+    expect(fromSpaceId).toBeNull()
+    const stateAfter = await readSessionState()
+    expect(stateAfter).toEqual(stateBefore)
+  })
+
+  it('rejects a self-extension URL — returns null tab, state unchanged', async () => {
+    await seedFocusedWindow([{ url: 'chrome-extension://test-id/manager.html' }])
+    const focusedTabs = await fakeBrowser.tabs.query({ windowId: FOCUSED_WIN })
+    const tabId = focusedTabs.find(
+      (t: chrome.tabs.Tab) => t.url === 'chrome-extension://test-id/manager.html',
+    )!.id!
+
+    const stateBefore = await readSessionState()
+    const { tab, fromSpaceId } = await moveLiveTabToSpace(tabId, 'space-X')
+
+    expect(tab).toBeNull()
+    expect(fromSpaceId).toBeNull()
+    const stateAfter = await readSessionState()
+    expect(stateAfter).toEqual(stateBefore)
+  })
+
+  it('no-op when source space equals target space — returns null tab and null fromSpaceId', async () => {
+    await seedFocusedWindow([{ url: 'https://same.com/' }])
+    // Archive so the tab is already tagged for space-X
+    await archiveCurrentWindowToSpace('space-X')
+    const stateAfterArchive = await readSessionState()
+    const vaultId = stateAfterArchive.vaultWindowId!
+    const vaultedTabs = await fakeBrowser.tabs.query({ windowId: vaultId })
+    const tabId = vaultedTabs.find((t: chrome.tabs.Tab) => t.url === 'https://same.com/')!.id!
+
+    // Bring tab to focused window so the lookup works
+    await fakeBrowser.tabs.update(tabId, { windowId: FOCUSED_WIN })
+
+    const { tab, fromSpaceId } = await moveLiveTabToSpace(tabId, 'space-X')
+
+    expect(tab).toBeNull()
+    expect(fromSpaceId).toBeNull()
   })
 })
 

@@ -228,6 +228,64 @@ export async function purgeVaultedTabsForSpace(spaceId: string): Promise<void> {
   await writeSessionState(dropSpaceFromState(state, spaceId))
 }
 
+export async function moveLiveTabToSpace(
+  tabId: number,
+  toSpaceId: string,
+): Promise<{ tab: Tab | null; fromSpaceId: string | null }> {
+  // 1. Look up the tab
+  let chromeTab: chrome.tabs.Tab
+  try {
+    chromeTab = await chrome.tabs.get(tabId)
+  } catch {
+    return { tab: null, fromSpaceId: null }
+  }
+
+  // 2. Reject if pinned, self-extension, or non-restorable
+  if (chromeTab.pinned) return { tab: null, fromSpaceId: null }
+  if (isSelfExtension(chromeTab.url)) return { tab: null, fromSpaceId: null }
+  if (!canRestore(chromeTab.url)) return { tab: null, fromSpaceId: null }
+
+  // 3. Reverse-lookup current tag (if any)
+  const state = await readSessionState()
+  let fromSpaceId: string | null = null
+  for (const [sid, ids] of Object.entries(state.spaceIdToTabIds)) {
+    if (ids.includes(tabId)) {
+      fromSpaceId = sid
+      break
+    }
+  }
+  if (fromSpaceId === toSpaceId) {
+    // 已经在目标空间里,无需操作
+    return { tab: null, fromSpaceId: null }
+  }
+
+  // 4. Move tab into vault
+  const vaultId = await ensureVaultWindow()
+  try {
+    await chrome.tabs.move([tabId], { windowId: vaultId, index: -1 })
+  } catch {
+    return { tab: null, fromSpaceId }
+  }
+
+  // 5. Update session: untag from old (if any), tag to new
+  let nextState = state
+  if (fromSpaceId !== null) {
+    nextState = untagTabIdInState(nextState, tabId)
+  }
+  nextState = tagTabIdsForSpace(nextState, toSpaceId, [tabId])
+  await writeSessionState(nextState)
+
+  // 6. Build Tab payload from current chrome.tabs.Tab snapshot
+  const url = chromeTab.url!
+  const payload: Tab = {
+    url,
+    title: chromeTab.title && chromeTab.title.length > 0 ? chromeTab.title : url,
+    ...(chromeTab.favIconUrl ? { favIconUrl: chromeTab.favIconUrl } : {}),
+  }
+
+  return { tab: payload, fromSpaceId }
+}
+
 // Called from background listeners
 export async function onTabRemovedHandler(tabId: number): Promise<void> {
   const state = await readSessionState()
