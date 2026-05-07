@@ -14,7 +14,7 @@ export default function App() {
   const {
     db, loaded, toasts,
     load, archive, archiveNew, rename, remove, duplicate,
-    removeTab, moveTab,
+    removeTab, moveTab, merge,
     dismissToast, pushToast,
   } = useSpaceStore()
 
@@ -130,6 +130,28 @@ export default function App() {
     }
   }
 
+  const handleMerge = async (fromId: string, toId: string) => {
+    if (fromId === toId) return
+    const fromSpace = db.spaces.find((s) => s.id === fromId)
+    const toSpace = db.spaces.find((s) => s.id === toId)
+    if (!fromSpace || !toSpace) {
+      pushToast('error', t('toastSpaceMissing'))
+      return
+    }
+    const ok = window.confirm(
+      t('confirmMerge', { from: fromSpace.name, to: toSpace.name }),
+    )
+    if (!ok) return
+    try {
+      const success = await merge(fromId, toId)
+      if (success) {
+        pushToast('info', t('toastMerged', { name: toSpace.name }))
+      }
+    } catch {
+      pushToast('error', t('toastMergeFailed'))
+    }
+  }
+
   const switchTo = async (id: string) => {
     const target = db.spaces.find((s) => s.id === id)
     if (!target) {
@@ -177,6 +199,7 @@ export default function App() {
               onTabOpen={openTabUrl}
               onTabRemove={removeTab}
               onTabMove={moveTab}
+              onMerge={handleMerge}
             />
           ) : (
             <div className="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center text-sm text-slate-400">

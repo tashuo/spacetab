@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { Space } from '@/lib/schema'
 import { colorForSpace, relativeTime } from '@/lib/ui-utils'
 import { useT } from '@/lib/i18n'
-import { ArrowRight, Copy, Pencil, Trash } from './icons'
+import { ArrowRight, Copy, GripVertical, Pencil, Trash } from './icons'
 import { SpaceTabRow } from './space-tab-row'
 
 interface Props {
@@ -15,6 +15,7 @@ interface Props {
   onTabOpen: (url: string) => void
   onTabRemove: (spaceId: string, url: string) => void
   onTabMove: (fromId: string, toId: string, url: string) => void
+  onMerge: (fromId: string, toId: string) => void
 }
 
 export function SpaceItem({
@@ -27,10 +28,12 @@ export function SpaceItem({
   onTabOpen,
   onTabRemove,
   onTabMove,
+  onMerge,
 }: Props) {
   const { t } = useT()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(space.name)
+  const [dragKind, setDragKind] = useState<'tab' | 'space' | null>(null)
   const palette = colorForSpace(space.id)
 
   const commit = () => {
@@ -47,10 +50,89 @@ export function SpaceItem({
     if (ok) onDelete(space.id)
   }
 
+  const handleDragOver = (e: React.DragEvent) => {
+    if (e.dataTransfer.types.includes('application/x-spacetab-tab')) {
+      e.preventDefault()
+      e.dataTransfer.dropEffect = 'move'
+      setDragKind('tab')
+    } else if (e.dataTransfer.types.includes('application/x-spacetab-space')) {
+      e.preventDefault()
+      e.dataTransfer.dropEffect = 'move'
+      setDragKind('space')
+    }
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    // 只在真正离开卡片时清除(子元素触发的 leave 不算)
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDragKind(null)
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    const tabRaw = e.dataTransfer.getData('application/x-spacetab-tab')
+    if (tabRaw) {
+      e.preventDefault()
+      setDragKind(null)
+      try {
+        const { fromSpaceId, url } = JSON.parse(tabRaw) as { fromSpaceId: string; url: string }
+        if (fromSpaceId !== space.id) {
+          onTabMove(fromSpaceId, space.id, url)
+        }
+      } catch {
+        // 数据损坏,忽略
+      }
+      return
+    }
+    const spaceRaw = e.dataTransfer.getData('application/x-spacetab-space')
+    if (spaceRaw) {
+      e.preventDefault()
+      setDragKind(null)
+      try {
+        const { spaceId: fromId } = JSON.parse(spaceRaw) as { spaceId: string }
+        if (fromId !== space.id) {
+          onMerge(fromId, space.id)
+        }
+      } catch {
+        // 数据损坏,忽略
+      }
+    }
+  }
+
+  // 拖放高亮样式:tab drop 用 violet,space merge 用 emerald
+  const dropRingClass =
+    dragKind === 'tab'
+      ? 'ring-2 ring-violet-400 bg-violet-50/60'
+      : dragKind === 'space'
+        ? 'ring-2 ring-emerald-400 bg-emerald-50/60'
+        : ''
+
   return (
-    <div className="group/card relative bg-white rounded-xl border border-slate-200/80 transition-all duration-150 hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-[0_4px_8px_rgba(15,23,42,0.04),0_12px_32px_rgba(15,23,42,0.08)]">
+    <div
+      className={`group/card relative bg-white rounded-xl border border-slate-200/80 transition-all duration-150 hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-[0_4px_8px_rgba(15,23,42,0.04),0_12px_32px_rgba(15,23,42,0.08)] ${dropRingClass}`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       {/* 左侧色条 */}
       <div className={`absolute left-0 top-4 bottom-4 w-[5px] rounded-r-full ${palette.bar}`} />
+
+      {/* 拖动整张卡片的把手(hover 卡片时显示) */}
+      <div
+        draggable
+        onDragStart={(e) => {
+          e.dataTransfer.setData(
+            'application/x-spacetab-space',
+            JSON.stringify({ spaceId: space.id }),
+          )
+          e.dataTransfer.effectAllowed = 'move'
+        }}
+        className="absolute left-1 top-3 opacity-0 group-hover/card:opacity-100 cursor-grab active:cursor-grabbing transition-opacity z-10"
+        title={t('dragHandle')}
+        aria-label={t('dragHandle')}
+      >
+        <GripVertical className="w-3.5 h-3.5 text-slate-400" />
+      </div>
 
       <div className="pl-5 pr-4 py-4">
         {/* 卡片头部 */}
@@ -139,6 +221,7 @@ export function SpaceItem({
                 tab={tab}
                 otherSpaces={otherSpaces}
                 rowAccentClass={palette.rowAccent}
+                fromSpaceId={space.id}
                 onOpen={onTabOpen}
                 onRemove={(url) => onTabRemove(space.id, url)}
                 onMove={(toId, url) => onTabMove(space.id, toId, url)}

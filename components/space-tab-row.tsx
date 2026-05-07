@@ -8,6 +8,7 @@ interface Props {
   tab: Tab
   otherSpaces: Space[]
   rowAccentClass?: string
+  fromSpaceId: string
   onOpen: (url: string) => void
   onRemove: (url: string) => void
   onMove: (toSpaceId: string, url: string) => void
@@ -17,12 +18,14 @@ export function SpaceTabRow({
   tab,
   otherSpaces,
   rowAccentClass = 'group-hover/row:border-slate-300',
+  fromSpaceId,
   onOpen,
   onRemove,
   onMove,
 }: Props) {
   const { t } = useT()
   const [moveOpen, setMoveOpen] = useState(false)
+  const [dragging, setDragging] = useState(false)
   const [menuPos, setMenuPos] = useState<{ top: number; right: number }>({ top: 0, right: 0 })
   const [favFailed, setFavFailed] = useState(false)
   const moveBtnRef = useRef<HTMLButtonElement>(null)
@@ -69,11 +72,21 @@ export function SpaceTabRow({
     <div
       role="button"
       tabIndex={0}
+      draggable
       onClick={() => onOpen(tab.url)}
       onKeyDown={(e) => {
         if (e.key === 'Enter') onOpen(tab.url)
       }}
-      className={`group/row flex items-center gap-2.5 pl-2.5 pr-2 py-1.5 -mx-2 rounded-md cursor-pointer hover:bg-slate-50 transition-colors border-l-2 border-transparent ${rowAccentClass}`}
+      onDragStart={(e) => {
+        e.dataTransfer.setData(
+          'application/x-spacetab-tab',
+          JSON.stringify({ fromSpaceId, url: tab.url }),
+        )
+        e.dataTransfer.effectAllowed = 'move'
+        setDragging(true)
+      }}
+      onDragEnd={() => setDragging(false)}
+      className={`group/row flex items-center gap-2.5 pl-2.5 pr-2 py-1.5 -mx-2 rounded-md cursor-pointer hover:bg-slate-50 transition-colors border-l-2 border-transparent ${rowAccentClass} ${dragging ? 'opacity-40' : ''}`}
       title={tab.url}
     >
       {tab.favIconUrl && !favFailed ? (
