@@ -12,6 +12,7 @@ interface Props {
   onTabOpen: (url: string) => void
   onTabRemove: (spaceId: string, url: string) => void
   onTabMove: (fromId: string, toId: string, url: string) => void
+  onLiveTabDrop: (tabId: number, toSpaceId: string) => void
   onMerge: (fromId: string, toId: string) => void
 }
 
@@ -24,6 +25,7 @@ export function SpaceList({
   onTabOpen,
   onTabRemove,
   onTabMove,
+  onLiveTabDrop,
   onMerge,
 }: Props) {
   const { t } = useT()
@@ -54,6 +56,7 @@ export function SpaceList({
           onTabOpen={onTabOpen}
           onTabRemove={onTabRemove}
           onTabMove={onTabMove}
+          onLiveTabDrop={onLiveTabDrop}
           onMerge={onMerge}
         />
       ))}

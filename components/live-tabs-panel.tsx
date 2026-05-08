@@ -115,8 +115,22 @@ function LiveTabRow({ tab, spaces, onMoveToSpace }: RowProps) {
     setMoveOpen(true)
   }
 
+  // 拖到 space card 上 = 加入该空间(不动当前窗口的 tab,跟弹层菜单语义一致)
+  const draggable = canMove
   return (
     <li
+      draggable={draggable}
+      onDragStart={
+        draggable
+          ? (e) => {
+              e.dataTransfer.setData(
+                'application/x-spacetab-live-tab',
+                JSON.stringify({ tabId: tab.id }),
+              )
+              e.dataTransfer.effectAllowed = 'copy'
+            }
+          : undefined
+      }
       className={`group flex items-center gap-2 px-3 py-1.5 text-sm cursor-pointer hover:bg-slate-50 transition-colors ${
         tab.restorable ? 'text-slate-800' : 'text-slate-400'
       } ${tab.active ? 'bg-slate-50 border-l-2 border-teal-600 -ml-[2px] pl-[14px]' : ''}`}

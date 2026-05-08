@@ -15,6 +15,7 @@ interface Props {
   onTabOpen: (url: string) => void
   onTabRemove: (spaceId: string, url: string) => void
   onTabMove: (fromId: string, toId: string, url: string) => void
+  onLiveTabDrop: (tabId: number, toSpaceId: string) => void
   onMerge: (fromId: string, toId: string) => void
 }
 
@@ -28,12 +29,13 @@ export function SpaceItem({
   onTabOpen,
   onTabRemove,
   onTabMove,
+  onLiveTabDrop,
   onMerge,
 }: Props) {
   const { t } = useT()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(space.name)
-  const [dragKind, setDragKind] = useState<'tab' | 'space' | null>(null)
+  const [dragKind, setDragKind] = useState<'tab' | 'space' | 'liveTab' | null>(null)
   const palette = colorForSpace(space.id)
 
   const commit = () => {
@@ -55,6 +57,10 @@ export function SpaceItem({
       e.preventDefault()
       e.dataTransfer.dropEffect = 'move'
       setDragKind('tab')
+    } else if (e.dataTransfer.types.includes('application/x-spacetab-live-tab')) {
+      e.preventDefault()
+      e.dataTransfer.dropEffect = 'copy'
+      setDragKind('liveTab')
     } else if (e.dataTransfer.types.includes('application/x-spacetab-space')) {
       e.preventDefault()
       e.dataTransfer.dropEffect = 'move'
@@ -84,6 +90,18 @@ export function SpaceItem({
       }
       return
     }
+    const liveTabRaw = e.dataTransfer.getData('application/x-spacetab-live-tab')
+    if (liveTabRaw) {
+      e.preventDefault()
+      setDragKind(null)
+      try {
+        const { tabId } = JSON.parse(liveTabRaw) as { tabId: number }
+        onLiveTabDrop(tabId, space.id)
+      } catch {
+        // 数据损坏,忽略
+      }
+      return
+    }
     const spaceRaw = e.dataTransfer.getData('application/x-spacetab-space')
     if (spaceRaw) {
       e.preventDefault()
@@ -99,13 +117,15 @@ export function SpaceItem({
     }
   }
 
-  // 拖放高亮样式:tab drop 用 violet,space merge 用 emerald
+  // 拖放高亮样式:跨空间 tab drop 用 violet,live tab 加入用 indigo,空间合并用 emerald
   const dropRingClass =
     dragKind === 'tab'
       ? 'ring-2 ring-violet-400 bg-violet-50/60'
-      : dragKind === 'space'
-        ? 'ring-2 ring-emerald-400 bg-emerald-50/60'
-        : ''
+      : dragKind === 'liveTab'
+        ? 'ring-2 ring-indigo-400 bg-indigo-50/60'
+        : dragKind === 'space'
+          ? 'ring-2 ring-emerald-400 bg-emerald-50/60'
+          : ''
 
   return (
     <div

@@ -278,6 +278,7 @@ export default function App() {
               onTabOpen={openTabUrl}
               onTabRemove={removeTab}
               onTabMove={moveTab}
+              onLiveTabDrop={handleLiveTabMove}
               onMerge={handleMerge}
             />
           ) : (
