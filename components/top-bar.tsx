@@ -74,13 +74,14 @@ export function TopBar({
   return (
     <header className="sticky top-0 z-30 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border-b border-slate-200 dark:border-slate-700/60">
       <div className="max-w-6xl mx-auto px-6 h-14 flex items-center gap-4">
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm shadow-violet-200/60">
+        {/* 左:品牌(自身宽度 + flex-1 撑开) */}
+        <div className="flex-1 flex items-center gap-3 min-w-0">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm shadow-violet-200/60 shrink-0">
             <Layers className="w-4 h-4 text-white" />
           </div>
-          <div className="leading-tight">
+          <div className="leading-tight min-w-0">
             <h1 className="text-[15px] font-semibold tracking-tight text-slate-900 dark:text-slate-100">SpaceTab</h1>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate">
               {t('spacesAndTabsCount', {
                 s: spaces.length,
                 t: spaces.reduce((sum, sp) => sum + sp.tabs.length, 0),
@@ -89,7 +90,8 @@ export function TopBar({
           </div>
         </div>
 
-        <div className="flex-1 max-w-md relative">
+        {/* 中:搜索(固定宽度,居中) */}
+        <div className="w-full max-w-md relative shrink-0">
           <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
             <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
           </div>
@@ -112,7 +114,8 @@ export function TopBar({
           )}
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        {/* 右:三个按钮靠右(flex-1 + justify-end) */}
+        <div className="flex-1 flex items-center justify-end gap-2">
           <button
             onClick={onHelp}
             className="w-8 h-8 flex items-center justify-center rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
