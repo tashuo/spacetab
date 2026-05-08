@@ -5,6 +5,8 @@ import { Layers } from './icons'
 
 interface Props {
   spaces: Space[]
+  /** App 已经把 spaces 排好序传进来,SpaceList 不再排 */
+  focusedSpaceId?: string | null
   onSwitch: (id: string) => void
   onRename: (id: string, name: string) => void
   onDelete: (id: string) => void
@@ -18,6 +20,7 @@ interface Props {
 
 export function SpaceList({
   spaces,
+  focusedSpaceId = null,
   onSwitch,
   onRename,
   onDelete,
@@ -40,15 +43,14 @@ export function SpaceList({
     )
   }
 
-  const sorted = [...spaces].sort((a, b) => b.updatedAt - a.updatedAt)
-
   return (
     <div className="grid grid-cols-1 gap-3">
-      {sorted.map((s) => (
+      {spaces.map((s) => (
         <SpaceItem
           key={s.id}
           space={s}
           otherSpaces={spaces.filter((x) => x.id !== s.id)}
+          focused={focusedSpaceId === s.id}
           onSwitch={onSwitch}
           onRename={onRename}
           onDelete={onDelete}

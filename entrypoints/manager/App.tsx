@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { TopBar } from '@/components/top-bar'
 import { SpaceList } from '@/components/space-list'
 import { LiveTabsPanel } from '@/components/live-tabs-panel'
@@ -22,6 +22,7 @@ import {
 } from '@/lib/export-import'
 import { useT } from '@/lib/i18n'
 import { useTheme } from '@/lib/theme'
+import { filterDatabase } from '@/lib/search'
 import type { Tab, Database } from '@/lib/schema'
 
 export default function App() {
@@ -48,6 +49,72 @@ export default function App() {
 
   // 帮助对话框:null=关,'help'=用户主动打开,'welcome'=首次自动弹
   const [helpDialog, setHelpDialog] = useState<null | 'help' | 'welcome'>(null)
+
+  // 搜索 + 键盘导航
+  const [query, setQuery] = useState('')
+  const searchInputRef = useRef<HTMLInputElement | null>(null)
+  const filteredDb = useMemo(() => filterDatabase(db, query), [db, query])
+  const sortedSpaces = useMemo(
+    () => [...filteredDb.spaces].sort((a, b) => b.updatedAt - a.updatedAt),
+    [filteredDb.spaces],
+  )
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null)
+
+  // 全局键盘:/ 聚焦搜索;esc 清搜索/失焦;在非输入框时 j/k 上下、enter 切换
+  useEffect(() => {
+    const isTextInput = (el: Element | null): boolean => {
+      if (!el) return false
+      const tag = el.tagName
+      return tag === 'INPUT' || tag === 'TEXTAREA' || (el as HTMLElement).isContentEditable
+    }
+    const onKey = (e: KeyboardEvent) => {
+      const inText = isTextInput(document.activeElement)
+      if (e.key === '/' && !inText) {
+        e.preventDefault()
+        searchInputRef.current?.focus()
+        return
+      }
+      if (e.key === 'Escape') {
+        if (inText && document.activeElement === searchInputRef.current) {
+          if (query.length > 0) setQuery('')
+          else searchInputRef.current?.blur()
+          return
+        }
+        if (focusedIndex !== null) setFocusedIndex(null)
+        return
+      }
+      if (inText) return
+      if (sortedSpaces.length === 0) return
+      if (e.key === 'j' || e.key === 'ArrowDown') {
+        e.preventDefault()
+        setFocusedIndex((prev) => {
+          const next = prev === null ? 0 : Math.min(prev + 1, sortedSpaces.length - 1)
+          return next
+        })
+      } else if (e.key === 'k' || e.key === 'ArrowUp') {
+        e.preventDefault()
+        setFocusedIndex((prev) => {
+          const next = prev === null ? sortedSpaces.length - 1 : Math.max(prev - 1, 0)
+          return next
+        })
+      } else if (e.key === 'Enter' && focusedIndex !== null) {
+        e.preventDefault()
+        const target = sortedSpaces[focusedIndex]
+        if (target) void switchTo(target.id)
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+    // switchTo 在下面声明,但 closure 会捕获最新值因为依赖里没列。这里 ESLint 可能告警 — 用 ref 模式可以,但简单点接受。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, focusedIndex, sortedSpaces])
+
+  // 焦点 index 越界时纠偏(空间被过滤掉了)
+  useEffect(() => {
+    if (focusedIndex !== null && focusedIndex >= sortedSpaces.length) {
+      setFocusedIndex(sortedSpaces.length === 0 ? null : sortedSpaces.length - 1)
+    }
+  }, [sortedSpaces.length, focusedIndex])
 
   // 首次启动检测:storage.local 里没看过 welcome 标记就自动打开,并立即标记已看
   useEffect(() => {
@@ -279,6 +346,9 @@ export default function App() {
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900 text-slate-900 dark:text-slate-100">
       <TopBar
         spaces={db.spaces}
+        query={query}
+        onQueryChange={setQuery}
+        searchInputRef={searchInputRef}
         onExport={handleExport}
         onImport={handleImport}
         onHelp={() => setHelpDialog('help')}
@@ -298,21 +368,30 @@ export default function App() {
             <h2 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               {t('mySpaces')}
             </h2>
-            <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500">{db.spaces.length}</span>
+            <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500">
+              {query ? `${filteredDb.spaces.length} / ${db.spaces.length}` : db.spaces.length}
+            </span>
           </div>
           {loaded ? (
-            <SpaceList
-              spaces={db.spaces}
-              onSwitch={switchTo}
-              onRename={rename}
-              onDelete={remove}
-              onDuplicate={handleDuplicate}
-              onTabOpen={openTabUrl}
-              onTabRemove={removeTab}
-              onTabMove={moveTab}
-              onLiveTabDrop={handleLiveTabMove}
-              onMerge={handleMerge}
-            />
+            sortedSpaces.length === 0 && query ? (
+              <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50/40 dark:bg-slate-900/40 px-6 py-12 text-center text-sm text-slate-500 dark:text-slate-400">
+                {t('noSearchResults')}
+              </div>
+            ) : (
+              <SpaceList
+                spaces={sortedSpaces}
+                focusedSpaceId={focusedIndex !== null ? sortedSpaces[focusedIndex]?.id ?? null : null}
+                onSwitch={switchTo}
+                onRename={rename}
+                onDelete={remove}
+                onDuplicate={handleDuplicate}
+                onTabOpen={openTabUrl}
+                onTabRemove={removeTab}
+                onTabMove={moveTab}
+                onLiveTabDrop={handleLiveTabMove}
+                onMerge={handleMerge}
+              />
+            )
           ) : (
             <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-6 py-16 text-center text-sm text-slate-400 dark:text-slate-500">
               {t('loading')}

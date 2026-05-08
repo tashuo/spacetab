@@ -1,13 +1,15 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import type { Space } from '@/lib/schema'
 import { colorForSpace, relativeTime } from '@/lib/ui-utils'
 import { useT } from '@/lib/i18n'
-import { ArrowRight, Copy, GripVertical, Pencil, Trash } from './icons'
+import { ArrowRight, Copy, GripVertical, Pencil, Search, Trash, X } from './icons'
 import { SpaceTabRow } from './space-tab-row'
+import { filterSpaceTabs } from '@/lib/search'
 
 interface Props {
   space: Space
   otherSpaces: Space[]
+  focused?: boolean
   onSwitch: (id: string) => void
   onRename: (id: string, name: string) => void
   onDelete: (id: string) => void
@@ -22,6 +24,7 @@ interface Props {
 export function SpaceItem({
   space,
   otherSpaces,
+  focused = false,
   onSwitch,
   onRename,
   onDelete,
@@ -36,7 +39,24 @@ export function SpaceItem({
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(space.name)
   const [dragKind, setDragKind] = useState<'tab' | 'space' | 'liveTab' | null>(null)
+  // 空间内本地搜索:点放大镜展开
+  const [cardQuery, setCardQuery] = useState('')
+  const [cardSearchOpen, setCardSearchOpen] = useState(false)
+  const cardSearchInputRef = useRef<HTMLInputElement | null>(null)
   const palette = colorForSpace(space.id)
+
+  // focused 状态变化时滚到视口
+  const cardRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    if (focused) cardRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [focused])
+
+  useEffect(() => {
+    if (cardSearchOpen) cardSearchInputRef.current?.focus()
+  }, [cardSearchOpen])
+
+  // 应用本地搜索过滤
+  const visibleSpace = cardQuery ? filterSpaceTabs(space, cardQuery) : space
 
   const commit = () => {
     const trimmed = draft.trim()
@@ -129,7 +149,10 @@ export function SpaceItem({
 
   return (
     <div
-      className={`group/card relative bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700/80 dark:border-slate-700/80 transition-all duration-150 hover:border-slate-300 dark:border-slate-600 hover:-translate-y-0.5 hover:shadow-[0_4px_8px_rgba(15,23,42,0.04),0_12px_32px_rgba(15,23,42,0.08)] ${dropRingClass}`}
+      ref={cardRef}
+      className={`group/card relative bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700/80 transition-all duration-150 hover:border-slate-300 dark:hover:border-slate-600 hover:-translate-y-0.5 hover:shadow-[0_4px_8px_rgba(15,23,42,0.04),0_12px_32px_rgba(15,23,42,0.08)] ${
+        focused ? 'ring-2 ring-slate-400 dark:ring-slate-500 ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-950' : ''
+      } ${dropRingClass}`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -194,6 +217,27 @@ export function SpaceItem({
           </div>
           {/* 操作按钮区 */}
           <div className="flex items-center gap-1 opacity-0 group-hover/card:opacity-100 focus-within:opacity-100 transition-opacity duration-150">
+            {space.tabs.length > 1 && (
+              <button
+                onClick={() => {
+                  if (cardSearchOpen) {
+                    setCardSearchOpen(false)
+                    setCardQuery('')
+                  } else {
+                    setCardSearchOpen(true)
+                  }
+                }}
+                className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${
+                  cardSearchOpen || cardQuery
+                    ? 'text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700'
+                    : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
+                }`}
+                title={t('searchInSpace')}
+                aria-label={t('searchInSpace')}
+              >
+                <Search className="w-3.5 h-3.5" />
+              </button>
+            )}
             <button
               onClick={() => {
                 setDraft(space.name)
@@ -232,10 +276,38 @@ export function SpaceItem({
           </div>
         </div>
 
+        {/* 空间内搜索框(展开时显示) */}
+        {cardSearchOpen && space.tabs.length > 1 && (
+          <div className="mt-3 relative">
+            <input
+              ref={cardSearchInputRef}
+              value={cardQuery}
+              onChange={(e) => setCardQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  setCardQuery('')
+                  setCardSearchOpen(false)
+                }
+              }}
+              placeholder={t('searchInSpace')}
+              className="w-full pl-7 pr-7 py-1.5 text-xs rounded-md bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-slate-900 focus:border-slate-300 dark:focus:border-slate-600 focus:outline-none text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500"
+            />
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 dark:text-slate-500 pointer-events-none" />
+            {cardQuery.length > 0 && (
+              <button
+                onClick={() => setCardQuery('')}
+                className="absolute right-1 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+        )}
+
         {/* 标签列表 */}
-        {space.tabs.length > 0 && (
+        {visibleSpace.tabs.length > 0 ? (
           <div className="mt-3 space-y-0.5">
-            {space.tabs.map((tab, i) => (
+            {visibleSpace.tabs.map((tab, i) => (
               <SpaceTabRow
                 key={`${tab.url}-${i}`}
                 tab={tab}
@@ -248,7 +320,11 @@ export function SpaceItem({
               />
             ))}
           </div>
-        )}
+        ) : cardQuery ? (
+          <div className="mt-3 px-2 py-3 text-center text-xs text-slate-400 dark:text-slate-500">
+            {t('noSearchResults')}
+          </div>
+        ) : null}
       </div>
     </div>
   )

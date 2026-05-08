@@ -1,11 +1,14 @@
 import { useState, useRef, useEffect } from 'react'
-import { Layers, Globe, HelpCircle } from './icons'
+import { Layers, Globe, HelpCircle, Search, X } from './icons'
 import { useT, LANGS, LANG_LABELS } from '@/lib/i18n'
 import type { Space } from '@/lib/schema'
 import { SettingsMenu } from './settings-menu'
 
 interface Props {
   spaces: Space[]
+  query: string
+  onQueryChange: (q: string) => void
+  searchInputRef?: React.Ref<HTMLInputElement>
   onExport: () => void
   onImport: () => void
   onHelp: () => void
@@ -57,13 +60,21 @@ function LanguageSwitcher() {
   )
 }
 
-export function TopBar({ spaces, onExport, onImport, onHelp }: Props) {
+export function TopBar({
+  spaces,
+  query,
+  onQueryChange,
+  searchInputRef,
+  onExport,
+  onImport,
+  onHelp,
+}: Props) {
   const { t } = useT()
 
   return (
     <header className="sticky top-0 z-30 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border-b border-slate-200 dark:border-slate-700/60">
-      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center gap-4">
+        <div className="flex items-center gap-3 shrink-0">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm shadow-violet-200/60">
             <Layers className="w-4 h-4 text-white" />
           </div>
@@ -77,7 +88,31 @@ export function TopBar({ spaces, onExport, onImport, onHelp }: Props) {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex-1 max-w-md relative">
+          <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+            <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+          </div>
+          <input
+            ref={searchInputRef}
+            value={query}
+            onChange={(e) => onQueryChange(e.target.value)}
+            placeholder={t('searchPlaceholder')}
+            className="w-full pl-8 pr-8 py-1.5 text-sm rounded-md bg-slate-100/80 dark:bg-slate-800/60 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 focus:bg-white dark:focus:bg-slate-900 focus:border-slate-300 dark:focus:border-slate-600 focus:outline-none text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
+            aria-label={t('searchPlaceholder')}
+          />
+          {query.length > 0 && (
+            <button
+              onClick={() => onQueryChange('')}
+              className="absolute inset-y-0 right-0 pr-2 flex items-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              aria-label="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={onHelp}
             className="w-8 h-8 flex items-center justify-center rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
