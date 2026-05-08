@@ -2,6 +2,10 @@
 
 @import "tailwindcss";
 
+/* Tailwind v4 默认按 prefers-color-scheme 启用 dark:。
+   我们用 class-based(html.dark)以便支持系统/浅/深三态切换 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
