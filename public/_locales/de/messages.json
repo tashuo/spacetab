@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "SpaceTab",
+    "description": "Erweiterungsname (Symbolleiste und Web Store)"
+  },
+  "extDesc": {
+    "message": "Tabs in Projekt-Bereiche organisieren. Sofortiges Wechseln zwischen Bereichen über ein verstecktes Vault-Fenster. Alle Daten bleiben lokal.",
+    "description": "Kurzbeschreibung für Tooltip und Web Store"
+  }
+}

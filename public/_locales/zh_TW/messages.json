@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "SpaceTab",
+    "description": "擴充功能名稱(工具列與商店清單)"
+  },
+  "extDesc": {
+    "message": "用專案「空間」管理你的分頁。隱藏視窗讓空間切換瞬間完成,資料全部本地儲存。",
+    "description": "擴充功能簡短描述(工具列提示與商店清單)"
+  }
+}

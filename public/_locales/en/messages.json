@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "SpaceTab",
+    "description": "Extension name shown in the toolbar and Web Store."
+  },
+  "extDesc": {
+    "message": "Project spaces for your tabs. Switch between named workspaces instantly via a hidden vault window. All data stays local.",
+    "description": "Short description for the toolbar tooltip and Web Store."
+  }
+}

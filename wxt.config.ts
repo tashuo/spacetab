@@ -1,0 +1,21 @@
+import { defineConfig } from 'wxt'
+import tailwindcss from '@tailwindcss/vite'
+
+export default defineConfig({
+  modules: ['@wxt-dev/module-react'],
+  vite: () => ({
+    plugins: [tailwindcss()],
+  }),
+  manifest: {
+    // 名称和描述走 _locales/<lang>/messages.json,Chrome 商店会按用户语言显示
+    name: '__MSG_extName__',
+    description: '__MSG_extDesc__',
+    default_locale: 'en',
+    version: '0.9.0',
+    permissions: ['tabs', 'storage'],
+    action: {
+      default_title: '__MSG_extName__',
+    },
+    homepage_url: 'https://github.com/tashuo/spacetab',
+  },
+})
