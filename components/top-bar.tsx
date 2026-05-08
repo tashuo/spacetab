@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Layers, Globe } from './icons'
+import { Layers, Globe, HelpCircle } from './icons'
 import { useT, LANGS, LANG_LABELS } from '@/lib/i18n'
 import type { Space } from '@/lib/schema'
 import { SettingsMenu } from './settings-menu'
@@ -8,6 +8,7 @@ interface Props {
   spaces: Space[]
   onExport: () => void
   onImport: () => void
+  onHelp: () => void
 }
 
 function LanguageSwitcher() {
@@ -56,7 +57,7 @@ function LanguageSwitcher() {
   )
 }
 
-export function TopBar({ spaces, onExport, onImport }: Props) {
+export function TopBar({ spaces, onExport, onImport, onHelp }: Props) {
   const { t } = useT()
 
   return (
@@ -72,6 +73,14 @@ export function TopBar({ spaces, onExport, onImport }: Props) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={onHelp}
+            className="w-8 h-8 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            title={t('helpLabel')}
+            aria-label={t('helpLabel')}
+          >
+            <HelpCircle className="w-4 h-4" />
+          </button>
           <LanguageSwitcher />
           <SettingsMenu onExport={onExport} onImport={onImport} />
         </div>

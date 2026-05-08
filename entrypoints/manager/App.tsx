@@ -5,6 +5,7 @@ import { LiveTabsPanel } from '@/components/live-tabs-panel'
 import { ToastStack } from '@/components/toast-stack'
 import { SmartArchiveDialog } from '@/components/smart-archive-dialog'
 import { ImportDialog } from '@/components/import-dialog'
+import { HelpDialog } from '@/components/help-dialog'
 import { useSpaceStore } from '@/stores/space-store'
 import { archiveCurrentWindowToSpace, moveLiveTabToSpace, snapshotCurrentWindow, switchToSpace } from '@/lib/vault'
 import { clusterTabs } from '@/lib/clustering'
@@ -41,6 +42,29 @@ export default function App() {
     incoming: Database
     summary: ImportSummary
   } | null>(null)
+
+  // 帮助对话框:null=关,'help'=用户主动打开,'welcome'=首次自动弹
+  const [helpDialog, setHelpDialog] = useState<null | 'help' | 'welcome'>(null)
+
+  // 首次启动检测:storage.local 里没看过 welcome 标记就自动打开,并立即标记已看
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      try {
+        const stored = await chrome.storage.local.get('welcomeSeen')
+        if (cancelled) return
+        if (!stored.welcomeSeen) {
+          setHelpDialog('welcome')
+          void chrome.storage.local.set({ welcomeSeen: true }).catch(() => undefined)
+        }
+      } catch {
+        // 忽略
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const handleExport = () => {
     const json = serializeForExport(db)
@@ -250,7 +274,12 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-900">
-      <TopBar spaces={db.spaces} onExport={handleExport} onImport={handleImport} />
+      <TopBar
+        spaces={db.spaces}
+        onExport={handleExport}
+        onImport={handleImport}
+        onHelp={() => setHelpDialog('help')}
+      />
       <main className="max-w-6xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
         <aside className="lg:col-span-4 lg:sticky lg:top-20 lg:self-start">
           <LiveTabsPanel
@@ -303,6 +332,9 @@ export default function App() {
           onCancel={() => setImportDialog(null)}
           onConfirm={handleImportConfirm}
         />
+      )}
+      {helpDialog && (
+        <HelpDialog onClose={() => setHelpDialog(null)} isWelcome={helpDialog === 'welcome'} />
       )}
     </div>
   )
