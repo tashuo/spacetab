@@ -6,6 +6,9 @@ import { ToastStack } from '@/components/toast-stack'
 import { SmartArchiveDialog } from '@/components/smart-archive-dialog'
 import { ImportDialog } from '@/components/import-dialog'
 import { HelpDialog } from '@/components/help-dialog'
+import { CommandPalette } from '@/components/command-palette'
+import type { Command } from '@/lib/commands'
+import { colorForSpace } from '@/lib/ui-utils'
 import { useSpaceStore } from '@/stores/space-store'
 import { archiveCurrentWindowToSpace, moveLiveTabToSpace, snapshotCurrentWindow, switchToSpace } from '@/lib/vault'
 import { clusterTabs } from '@/lib/clustering'
@@ -21,7 +24,7 @@ import {
   type ImportSummary,
 } from '@/lib/export-import'
 import { useT } from '@/lib/i18n'
-import { useTheme } from '@/lib/theme'
+import { useTheme, type ThemePref } from '@/lib/theme'
 import { filterDatabase } from '@/lib/search'
 import type { Tab, Database } from '@/lib/schema'
 
@@ -35,7 +38,7 @@ export default function App() {
 
   const { t } = useT()
   // 在根上挂上主题切换的副作用(读 storage、监听系统)
-  useTheme()
+  const { pref: themePref, setPref: setThemePref } = useTheme()
 
   const [smartDialog, setSmartDialog] = useState<{
     clusters: ReturnType<typeof clusterTabs>
@@ -49,6 +52,8 @@ export default function App() {
 
   // 帮助对话框:null=关,'help'=用户主动打开,'welcome'=首次自动弹
   const [helpDialog, setHelpDialog] = useState<null | 'help' | 'welcome'>(null)
+  // 命令面板开关
+  const [paletteOpen, setPaletteOpen] = useState(false)
 
   // 搜索 + 键盘导航
   const [query, setQuery] = useState('')
@@ -69,6 +74,12 @@ export default function App() {
     }
     const onKey = (e: KeyboardEvent) => {
       const inText = isTextInput(document.activeElement)
+      // ⌘K / Ctrl+K 任何时候打开命令面板
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setPaletteOpen((v) => !v)
+        return
+      }
       if (e.key === '/' && !inText) {
         e.preventDefault()
         searchInputRef.current?.focus()
@@ -115,6 +126,67 @@ export default function App() {
       setFocusedIndex(sortedSpaces.length === 0 ? null : sortedSpaces.length - 1)
     }
   }, [sortedSpaces.length, focusedIndex])
+
+  // 组装命令列表
+  const paletteCommands: Command[] = useMemo(() => {
+    const list: Command[] = [
+      {
+        id: 'archive',
+        group: 'action',
+        label: t('cmdArchive'),
+        perform: () => void archiveExisting('').catch(() => undefined), // 占位:用户需要选目标
+      },
+    ]
+    // archive 命令默认指向"新建空间"提示——更直接的做法:点 archive 直接打开归档下拉。
+    // 这里简化为触发智能归档(用户能看到结果),archive-current 让用户去顶栏选目标空间。
+    list.length = 0 // reset,下面正式构建
+    list.push({
+      id: 'smart-archive',
+      group: 'action',
+      label: t('cmdSmartArchive'),
+      perform: () => void handleSmartArchive(),
+    })
+    list.push({
+      id: 'toggle-theme',
+      group: 'action',
+      label: t('cmdToggleTheme'),
+      description:
+        themePref === 'system' ? t('themeSystem') : themePref === 'light' ? t('themeLight') : t('themeDark'),
+      perform: cycleTheme,
+    })
+    list.push({
+      id: 'export-json',
+      group: 'action',
+      label: t('cmdExportJson'),
+      perform: handleExport,
+    })
+    list.push({
+      id: 'import-json',
+      group: 'action',
+      label: t('cmdImportJson'),
+      perform: () => void handleImport(),
+    })
+    list.push({
+      id: 'open-help',
+      group: 'action',
+      label: t('cmdHelp'),
+      perform: () => setHelpDialog('help'),
+    })
+    // 切换空间
+    for (const sp of sortedSpaces) {
+      const palette = colorForSpace(sp.id)
+      list.push({
+        id: `switch-${sp.id}`,
+        group: 'space',
+        label: t('cmdSwitchToSpace', { name: sp.name }),
+        description: `${sp.tabs.length} ${t('tabsLabel')}`,
+        accent: palette.hex,
+        perform: () => void switchTo(sp.id),
+      })
+    }
+    return list
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortedSpaces, themePref, t])
 
   // 首次启动检测:storage.local 里没看过 welcome 标记就自动打开,并立即标记已看
   useEffect(() => {
@@ -324,6 +396,12 @@ export default function App() {
     }
   }
 
+  const cycleTheme = () => {
+    const order: ThemePref[] = ['system', 'light', 'dark']
+    const i = order.indexOf(themePref)
+    setThemePref(order[(i + 1) % order.length]!)
+  }
+
   const switchTo = async (id: string) => {
     const target = db.spaces.find((s) => s.id === id)
     if (!target) {
@@ -418,6 +496,11 @@ export default function App() {
       {helpDialog && (
         <HelpDialog onClose={() => setHelpDialog(null)} isWelcome={helpDialog === 'welcome'} />
       )}
+      <CommandPalette
+        commands={paletteCommands}
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+      />
     </div>
   )
 }

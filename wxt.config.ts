@@ -16,6 +16,16 @@ export default defineConfig({
     action: {
       default_title: '__MSG_extName__',
     },
+    // 全局快捷键。用户可在 chrome://extensions/shortcuts 自定义
+    commands: {
+      _execute_action: {
+        suggested_key: {
+          default: 'Ctrl+Shift+S',
+          mac: 'Command+Shift+S',
+        },
+        description: 'Open SpaceTab',
+      },
+    },
     homepage_url: 'https://github.com/tashuo/spacetab',
   },
 })
