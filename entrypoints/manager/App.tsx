@@ -127,67 +127,6 @@ export default function App() {
     }
   }, [sortedSpaces.length, focusedIndex])
 
-  // 组装命令列表
-  const paletteCommands: Command[] = useMemo(() => {
-    const list: Command[] = [
-      {
-        id: 'archive',
-        group: 'action',
-        label: t('cmdArchive'),
-        perform: () => void archiveExisting('').catch(() => undefined), // 占位:用户需要选目标
-      },
-    ]
-    // archive 命令默认指向"新建空间"提示——更直接的做法:点 archive 直接打开归档下拉。
-    // 这里简化为触发智能归档(用户能看到结果),archive-current 让用户去顶栏选目标空间。
-    list.length = 0 // reset,下面正式构建
-    list.push({
-      id: 'smart-archive',
-      group: 'action',
-      label: t('cmdSmartArchive'),
-      perform: () => void handleSmartArchive(),
-    })
-    list.push({
-      id: 'toggle-theme',
-      group: 'action',
-      label: t('cmdToggleTheme'),
-      description:
-        themePref === 'system' ? t('themeSystem') : themePref === 'light' ? t('themeLight') : t('themeDark'),
-      perform: cycleTheme,
-    })
-    list.push({
-      id: 'export-json',
-      group: 'action',
-      label: t('cmdExportJson'),
-      perform: handleExport,
-    })
-    list.push({
-      id: 'import-json',
-      group: 'action',
-      label: t('cmdImportJson'),
-      perform: () => void handleImport(),
-    })
-    list.push({
-      id: 'open-help',
-      group: 'action',
-      label: t('cmdHelp'),
-      perform: () => setHelpDialog('help'),
-    })
-    // 切换空间
-    for (const sp of sortedSpaces) {
-      const palette = colorForSpace(sp.id)
-      list.push({
-        id: `switch-${sp.id}`,
-        group: 'space',
-        label: t('cmdSwitchToSpace', { name: sp.name }),
-        description: `${sp.tabs.length} ${t('tabsLabel')}`,
-        accent: palette.hex,
-        perform: () => void switchTo(sp.id),
-      })
-    }
-    return list
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortedSpaces, themePref, t])
-
   // 首次启动检测:storage.local 里没看过 welcome 标记就自动打开,并立即标记已看
   useEffect(() => {
     let cancelled = false
@@ -419,6 +358,60 @@ export default function App() {
       pushToast('error', t('toastSwitchFailed'))
     }
   }
+
+  // 组装命令面板的命令列表(必须放在所有 handler 声明之后,否则 TDZ)
+  const paletteCommands: Command[] = useMemo(() => {
+    const list: Command[] = []
+    list.push({
+      id: 'smart-archive',
+      group: 'action',
+      label: t('cmdSmartArchive'),
+      perform: () => void handleSmartArchive(),
+    })
+    list.push({
+      id: 'toggle-theme',
+      group: 'action',
+      label: t('cmdToggleTheme'),
+      description:
+        themePref === 'system'
+          ? t('themeSystem')
+          : themePref === 'light'
+            ? t('themeLight')
+            : t('themeDark'),
+      perform: cycleTheme,
+    })
+    list.push({
+      id: 'export-json',
+      group: 'action',
+      label: t('cmdExportJson'),
+      perform: handleExport,
+    })
+    list.push({
+      id: 'import-json',
+      group: 'action',
+      label: t('cmdImportJson'),
+      perform: () => void handleImport(),
+    })
+    list.push({
+      id: 'open-help',
+      group: 'action',
+      label: t('cmdHelp'),
+      perform: () => setHelpDialog('help'),
+    })
+    for (const sp of sortedSpaces) {
+      const palette = colorForSpace(sp.id)
+      list.push({
+        id: `switch-${sp.id}`,
+        group: 'space',
+        label: t('cmdSwitchToSpace', { name: sp.name }),
+        description: `${sp.tabs.length} ${t('tabsLabel')}`,
+        accent: palette.hex,
+        perform: () => void switchTo(sp.id),
+      })
+    }
+    return list
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortedSpaces, themePref, t])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900 text-slate-900 dark:text-slate-100">
