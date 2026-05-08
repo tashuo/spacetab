@@ -1,8 +1,14 @@
 {
-  "name": "wxt-react-starter",
-  "description": "manifest.json description",
+  "name": "spacetab",
+  "description": "Chrome tab manager built around project spaces — instant switching via a hidden vault window.",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.9.0",
+  "license": "MIT",
+  "homepage": "https://github.com/your-username/spacetab",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/spacetab"
+  },
   "type": "module",
   "scripts": {
     "dev": "wxt",

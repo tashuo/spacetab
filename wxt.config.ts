@@ -7,12 +7,15 @@ export default defineConfig({
     plugins: [tailwindcss()],
   }),
   manifest: {
-    name: 'SpaceTab',
-    description: 'Chrome tab manager built around project spaces',
-    version: '0.1.0',
+    // 名称和描述走 _locales/<lang>/messages.json,Chrome 商店会按用户语言显示
+    name: '__MSG_extName__',
+    description: '__MSG_extDesc__',
+    default_locale: 'en',
+    version: '0.9.0',
     permissions: ['tabs', 'storage'],
     action: {
-      default_title: 'SpaceTab',
+      default_title: '__MSG_extName__',
     },
+    homepage_url: 'https://github.com/your-username/spacetab',
   },
 })
