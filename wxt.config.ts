@@ -16,6 +16,6 @@ export default defineConfig({
     action: {
       default_title: '__MSG_extName__',
     },
-    homepage_url: 'https://github.com/your-username/spacetab',
+    homepage_url: 'https://github.com/tashuo/spacetab',
   },
 })
