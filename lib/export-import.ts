@@ -104,39 +104,41 @@ export function pickJsonFile(): Promise<string | null> {
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = 'application/json,.json'
-    input.style.display = 'none'
-    let resolved = false
+    input.style.position = 'fixed'
+    input.style.left = '-9999px'
+    input.style.opacity = '0'
+
+    let settled = false
     const cleanup = () => {
       if (input.parentNode) document.body.removeChild(input)
     }
-    input.onchange = async () => {
+    const finish = (value: string | null) => {
+      if (settled) return
+      settled = true
+      cleanup()
+      resolve(value)
+    }
+
+    input.addEventListener('change', () => {
       const file = input.files?.[0]
       if (!file) {
-        if (!resolved) { resolved = true; resolve(null) }
-        cleanup()
+        finish(null)
         return
       }
-      try {
-        const text = await file.text()
-        if (!resolved) { resolved = true; resolve(text) }
-      } catch {
-        if (!resolved) { resolved = true; resolve(null) }
-      } finally {
-        cleanup()
+      const reader = new FileReader()
+      reader.onload = () => {
+        const text = typeof reader.result === 'string' ? reader.result : null
+        finish(text)
       }
-    }
-    // 用户取消选择时无可靠事件;借助 window focus 兜底
-    const onWindowFocus = () => {
-      setTimeout(() => {
-        if (!resolved && (!input.files || input.files.length === 0)) {
-          resolved = true
-          cleanup()
-          resolve(null)
-        }
-      }, 200)
-    }
-    window.addEventListener('focus', onWindowFocus, { once: true })
+      reader.onerror = () => finish(null)
+      reader.readAsText(file)
+    })
+
+    // 现代浏览器原生 cancel 事件(Chrome 113+ / Firefox 91+);取消时直接收到
+    input.addEventListener('cancel', () => finish(null))
+
     document.body.appendChild(input)
+    // 必须在用户点击的同一同步链上调用,才能通过浏览器的 user-activation 检查
     input.click()
   })
 }
