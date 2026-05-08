@@ -21,6 +21,7 @@ import {
   type ImportSummary,
 } from '@/lib/export-import'
 import { useT } from '@/lib/i18n'
+import { useTheme } from '@/lib/theme'
 import type { Tab, Database } from '@/lib/schema'
 
 export default function App() {
@@ -32,6 +33,8 @@ export default function App() {
   } = useSpaceStore()
 
   const { t } = useT()
+  // 在根上挂上主题切换的副作用(读 storage、监听系统)
+  useTheme()
 
   const [smartDialog, setSmartDialog] = useState<{
     clusters: ReturnType<typeof clusterTabs>
@@ -273,7 +276,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-900">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900 text-slate-900 dark:text-slate-100">
       <TopBar
         spaces={db.spaces}
         onExport={handleExport}
@@ -292,10 +295,10 @@ export default function App() {
         </aside>
         <section className="lg:col-span-8">
           <div className="mb-3 px-1 flex items-baseline justify-between">
-            <h2 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            <h2 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               {t('mySpaces')}
             </h2>
-            <span className="text-[11px] font-mono text-slate-400">{db.spaces.length}</span>
+            <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500">{db.spaces.length}</span>
           </div>
           {loaded ? (
             <SpaceList
@@ -311,7 +314,7 @@ export default function App() {
               onMerge={handleMerge}
             />
           ) : (
-            <div className="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center text-sm text-slate-400">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-6 py-16 text-center text-sm text-slate-400 dark:text-slate-500">
               {t('loading')}
             </div>
           )}

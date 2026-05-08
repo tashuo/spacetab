@@ -141,22 +141,22 @@ export function SmartArchiveDialog({ initialClusters, totalTabsCount, onCancel, 
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-[640px] max-h-[85vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden"
+        className="w-full max-w-[640px] max-h-[85vh] bg-white dark:bg-slate-900 rounded-xl shadow-2xl flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="px-6 py-4 border-b border-slate-100 flex items-start gap-3">
+        <header className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-start gap-3">
           <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-sm">
             <Sparkle className="w-4 h-4" />
           </div>
           <div className="flex-1">
-            <h2 className="text-base font-semibold text-slate-900">{t('smartArchive')}</h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">{t('smartArchive')}</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {t('smartArchiveSummary', { n: totalTabsCount, g: clusters.length })}
             </p>
           </div>
           <button
             onClick={onCancel}
-            className="w-8 h-8 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
             aria-label={t('cancel')}
           >
             <X className="w-4 h-4" />
@@ -194,10 +194,10 @@ export function SmartArchiveDialog({ initialClusters, totalTabsCount, onCancel, 
           ))}
         </div>
 
-        <footer className="px-6 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/40">
+        <footer className="px-6 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/40">
           <button
             onClick={onCancel}
-            className="px-3 py-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
+            className="px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
           >
             {t('cancel')}
           </button>
@@ -281,11 +281,11 @@ function ClusterCard({
         acceptingDrop
           ? 'border-violet-400 bg-violet-50/40 ring-2 ring-violet-200'
           : muted
-          ? 'border-slate-200 bg-slate-50/40'
-          : 'border-slate-200 bg-white'
+          ? 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 dark:bg-slate-800/40'
+          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900'
       }`}
     >
-      <div className="group/header flex items-center gap-2 px-3 py-2 border-b border-slate-100">
+      <div className="group/header flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-800">
         <input
           type="checkbox"
           checked={cluster.included}
@@ -295,16 +295,16 @@ function ClusterCard({
         <input
           value={cluster.name}
           onChange={(e) => onRename(e.target.value)}
-          className={`flex-1 bg-transparent text-sm font-medium px-1 py-0.5 -mx-1 rounded border border-transparent hover:border-slate-200 focus:border-slate-300 focus:outline-none ${
-            muted ? 'text-slate-400' : 'text-slate-900'
+          className={`flex-1 bg-transparent text-sm font-medium px-1 py-0.5 -mx-1 rounded border border-transparent hover:border-slate-200 dark:border-slate-700 focus:border-slate-300 dark:border-slate-600 focus:outline-none ${
+            muted ? 'text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-slate-100'
           }`}
         />
-        <span className={`text-xs font-mono ${muted ? 'text-slate-300' : 'text-slate-500'}`}>
+        <span className={`text-xs font-mono ${muted ? 'text-slate-300 dark:text-slate-600' : 'text-slate-500 dark:text-slate-400 dark:text-slate-500'}`}>
           {cluster.tabs.length}
         </span>
         <button
           onClick={onDelete}
-          className="opacity-0 group-hover/header:opacity-100 focus-visible:opacity-100 w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-opacity"
+          className="opacity-0 group-hover/header:opacity-100 focus-visible:opacity-100 w-6 h-6 flex items-center justify-center rounded text-slate-400 dark:text-slate-500 hover:text-red-600 hover:bg-red-50 transition-opacity"
           title={t('deleteCluster')}
           aria-label={t('deleteCluster')}
         >
@@ -313,7 +313,7 @@ function ClusterCard({
       </div>
       <div className="px-3 py-2 space-y-0.5 max-h-48 overflow-y-auto">
         {cluster.tabs.length === 0 ? (
-          <div className="text-xs text-slate-400 py-2 text-center">—</div>
+          <div className="text-xs text-slate-400 dark:text-slate-500 py-2 text-center">—</div>
         ) : (
           cluster.tabs.map((tab) => {
             const isDraggingThis =
@@ -366,7 +366,7 @@ function ClusterTabRow({
       }}
       onDragEnd={onDragEnd}
       className={`group/row flex items-center gap-2 px-1 py-1 text-[13px] cursor-grab active:cursor-grabbing rounded ${
-        muted ? 'text-slate-400' : 'text-slate-700'
+        muted ? 'text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'
       } ${isDraggingThis ? 'opacity-40' : ''}`}
     >
       {tab.favIconUrl ? (
@@ -379,7 +379,7 @@ function ClusterTabRow({
       </span>
       <button
         onClick={onRemove}
-        className="opacity-0 group-hover/row:opacity-100 w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-opacity"
+        className="opacity-0 group-hover/row:opacity-100 w-5 h-5 flex items-center justify-center rounded text-slate-400 dark:text-slate-500 hover:text-red-600 hover:bg-red-50 transition-opacity"
         title="移除"
       >
         <X className="w-3 h-3" />

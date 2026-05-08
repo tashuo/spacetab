@@ -129,7 +129,7 @@ export function SpaceItem({
 
   return (
     <div
-      className={`group/card relative bg-white rounded-xl border border-slate-200/80 transition-all duration-150 hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-[0_4px_8px_rgba(15,23,42,0.04),0_12px_32px_rgba(15,23,42,0.08)] ${dropRingClass}`}
+      className={`group/card relative bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700/80 dark:border-slate-700/80 transition-all duration-150 hover:border-slate-300 dark:border-slate-600 hover:-translate-y-0.5 hover:shadow-[0_4px_8px_rgba(15,23,42,0.04),0_12px_32px_rgba(15,23,42,0.08)] ${dropRingClass}`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -147,11 +147,11 @@ export function SpaceItem({
           )
           e.dataTransfer.effectAllowed = 'move'
         }}
-        className="group/grip absolute left-0 top-1/2 -translate-y-1/2 w-7 h-10 flex items-center justify-center rounded-md cursor-grab active:cursor-grabbing transition-all duration-150 opacity-50 hover:opacity-100 hover:bg-slate-100 z-10"
+        className="group/grip absolute left-0 top-1/2 -translate-y-1/2 w-7 h-10 flex items-center justify-center rounded-md cursor-grab active:cursor-grabbing transition-all duration-150 opacity-50 hover:opacity-100 hover:bg-slate-100 dark:hover:bg-slate-700 z-10"
         title={t('dragHandle')}
         aria-label={t('dragHandle')}
       >
-        <GripVertical className="w-4 h-4 text-slate-500 group-hover/grip:text-slate-800 transition-colors" />
+        <GripVertical className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover/grip:text-slate-800 transition-colors" />
       </div>
 
       <div className="pl-7 pr-4 py-4">
@@ -173,22 +173,22 @@ export function SpaceItem({
                       setEditing(false)
                     }
                   }}
-                  className="flex-1 px-1.5 py-0.5 -ml-1.5 -my-0.5 text-[15px] font-semibold border border-slate-300 rounded bg-white"
+                  className="flex-1 px-1.5 py-0.5 -ml-1.5 -my-0.5 text-[15px] font-semibold border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900"
                 />
               ) : (
-                <h3 className="text-[15px] font-semibold text-slate-900 truncate tracking-tight">
+                <h3 className="text-[15px] font-semibold text-slate-900 dark:text-slate-100 truncate tracking-tight">
                   {space.name}
                 </h3>
               )}
             </div>
-            <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-500">
+            <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
               <span
                 className={`inline-flex items-center px-1.5 py-0.5 rounded-md font-mono text-[11px] ring-1 ${palette.countBg} ${palette.countText} ${palette.countRing}`}
               >
                 {space.tabs.length}
               </span>
               <span>{t('tabsLabel')}</span>
-              <span className="text-slate-300">·</span>
+              <span className="text-slate-300 dark:text-slate-600">·</span>
               <span>{relativeTime(space.updatedAt, t)}</span>
             </div>
           </div>
@@ -199,7 +199,7 @@ export function SpaceItem({
                 setDraft(space.name)
                 setEditing(true)
               }}
-              className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
               title={t('rename')}
               aria-label={t('rename')}
             >
@@ -207,7 +207,7 @@ export function SpaceItem({
             </button>
             <button
               onClick={() => onDuplicate(space.id)}
-              className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
               title={t('duplicate')}
               aria-label={t('duplicate')}
             >
@@ -215,7 +215,7 @@ export function SpaceItem({
             </button>
             <button
               onClick={onConfirmDelete}
-              className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 dark:text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
               title={t('delete')}
               aria-label={t('delete')}
             >

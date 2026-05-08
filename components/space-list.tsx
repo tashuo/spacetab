@@ -32,10 +32,10 @@ export function SpaceList({
 
   if (spaces.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-300 px-6 py-16 text-center bg-slate-50/40">
-        <Layers className="w-9 h-9 mx-auto text-slate-300" />
-        <p className="mt-3 text-sm font-medium text-slate-700">{t('emptyTitle')}</p>
-        <p className="mt-1 text-xs text-slate-500">{t('emptySubtitle')}</p>
+      <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 px-6 py-16 text-center bg-slate-50 dark:bg-slate-800/40">
+        <Layers className="w-9 h-9 mx-auto text-slate-300 dark:text-slate-600" />
+        <p className="mt-3 text-sm font-medium text-slate-700 dark:text-slate-200">{t('emptyTitle')}</p>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t('emptySubtitle')}</p>
       </div>
     )
   }

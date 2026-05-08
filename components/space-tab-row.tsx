@@ -17,7 +17,7 @@ interface Props {
 export function SpaceTabRow({
   tab,
   otherSpaces,
-  rowAccentClass = 'group-hover/row:border-slate-300',
+  rowAccentClass = 'group-hover/row:border-slate-300 dark:border-slate-600',
   fromSpaceId,
   onOpen,
   onRemove,
@@ -86,7 +86,7 @@ export function SpaceTabRow({
         setDragging(true)
       }}
       onDragEnd={() => setDragging(false)}
-      className={`group/row flex items-center gap-2.5 pl-2.5 pr-2 py-1.5 -mx-2 rounded-md cursor-pointer hover:bg-slate-50 transition-colors border-l-2 border-transparent ${rowAccentClass} ${dragging ? 'opacity-40' : ''}`}
+      className={`group/row flex items-center gap-2.5 pl-2.5 pr-2 py-1.5 -mx-2 rounded-md cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-l-2 border-transparent ${rowAccentClass} ${dragging ? 'opacity-40' : ''}`}
       title={tab.url}
     >
       {tab.favIconUrl && !favFailed ? (
@@ -94,14 +94,14 @@ export function SpaceTabRow({
           src={tab.favIconUrl}
           alt=""
           onError={() => setFavFailed(true)}
-          className="w-[18px] h-[18px] rounded ring-1 ring-slate-200/60 flex-shrink-0 bg-white"
+          className="w-[18px] h-[18px] rounded ring-1 ring-slate-200/60 dark:ring-slate-700/60 flex-shrink-0 bg-white dark:bg-slate-900"
         />
       ) : (
-        <span className="w-[18px] h-[18px] rounded bg-slate-100 ring-1 ring-slate-200/60 flex-shrink-0" />
+        <span className="w-[18px] h-[18px] rounded bg-slate-100 dark:bg-slate-700 ring-1 ring-slate-200/60 dark:ring-slate-700/60 flex-shrink-0" />
       )}
       <div className="flex-1 min-w-0 flex items-baseline gap-2">
-        <span className="text-[13px] text-slate-800 truncate">{tab.title || tab.url}</span>
-        <span className="text-[11px] text-slate-400 truncate flex-shrink-0 max-w-[40%]">{host}</span>
+        <span className="text-[13px] text-slate-800 dark:text-slate-200 truncate">{tab.title || tab.url}</span>
+        <span className="text-[11px] text-slate-400 dark:text-slate-500 truncate flex-shrink-0 max-w-[40%]">{host}</span>
       </div>
       <div className="flex items-center gap-0.5 opacity-0 group-hover/row:opacity-100 focus-within:opacity-100 transition-opacity">
         {otherSpaces.length > 0 && (
@@ -112,7 +112,7 @@ export function SpaceTabRow({
               if (moveOpen) setMoveOpen(false)
               else openMenu()
             }}
-            className="w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="w-6 h-6 flex items-center justify-center rounded text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
             title={t('moveToOtherSpace')}
             aria-label={t('moveToOtherSpace')}
           >
@@ -124,7 +124,7 @@ export function SpaceTabRow({
             e.stopPropagation()
             onRemove(tab.url)
           }}
-          className="w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+          className="w-6 h-6 flex items-center justify-center rounded text-slate-400 dark:text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
           title={t('removeFromSpace')}
           aria-label={t('removeFromSpace')}
         >
@@ -135,11 +135,11 @@ export function SpaceTabRow({
         createPortal(
           <div
             ref={menuRef}
-            className="fixed w-44 bg-white border border-slate-200 rounded-lg shadow-lg z-50 overflow-hidden"
+            className="fixed w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-50 overflow-hidden"
             style={{ top: menuPos.top, right: menuPos.right }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-100">
+            <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800">
               {t('moveTo')}
             </div>
             <div className="max-h-56 overflow-y-auto">
@@ -151,7 +151,7 @@ export function SpaceTabRow({
                     onMove(s.id, tab.url)
                     setMoveOpen(false)
                   }}
-                  className="block w-full text-left px-2 py-1.5 text-xs hover:bg-slate-50 truncate text-slate-700"
+                  className="block w-full text-left px-2 py-1.5 text-xs hover:bg-slate-50 dark:hover:bg-slate-800 truncate text-slate-700 dark:text-slate-200"
                 >
                   {s.name}
                 </button>

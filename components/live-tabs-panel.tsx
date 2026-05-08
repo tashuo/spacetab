@@ -27,22 +27,22 @@ export function LiveTabsPanel({
   const hasTabs = tabs.length > 0
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 overflow-visible">
-      <div className="px-4 pt-3 pb-2 border-b border-slate-100">
+    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 overflow-visible">
+      <div className="px-4 pt-3 pb-2 border-b border-slate-100 dark:border-slate-800">
         <div className="flex items-baseline justify-between">
-          <h2 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+          <h2 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             {t('currentWindow')}
           </h2>
-          <span className="text-[11px] font-mono text-slate-400">{tabs.length}</span>
+          <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500">{tabs.length}</span>
         </div>
         <div className="mt-2 flex gap-1.5">
           <button
             onClick={onSmartArchive}
             disabled={!hasTabs}
-            className="group flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded-md bg-gradient-to-br from-indigo-50 to-violet-50 text-violet-700 border border-violet-200/70 hover:from-indigo-100 hover:to-violet-100 hover:border-violet-300 disabled:from-slate-50 disabled:to-slate-50 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed transition-colors"
+            className="group flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded-md bg-gradient-to-br from-indigo-50 to-violet-50 text-violet-700 border border-violet-200/70 hover:from-indigo-100 hover:to-violet-100 hover:border-violet-300 disabled:from-slate-50 disabled:to-slate-50 disabled:text-slate-400 dark:text-slate-500 disabled:border-slate-200 dark:border-slate-700 disabled:cursor-not-allowed transition-colors"
             title={t('smartArchive')}
           >
-            <Sparkle className="w-3.5 h-3.5 text-violet-600 group-hover:text-violet-700 group-disabled:text-slate-400 transition-colors" />
+            <Sparkle className="w-3.5 h-3.5 text-violet-600 group-hover:text-violet-700 group-disabled:text-slate-400 dark:text-slate-500 transition-colors" />
             <span className="truncate">{t('smartArchive')}</span>
           </button>
           <ArchiveTrigger
@@ -61,7 +61,7 @@ export function LiveTabsPanel({
           ))}
         </ul>
       ) : (
-        <div className="px-4 py-8 text-center text-xs text-slate-400">{t('emptyLiveTabs')}</div>
+        <div className="px-4 py-8 text-center text-xs text-slate-400 dark:text-slate-500">{t('emptyLiveTabs')}</div>
       )}
     </div>
   )
@@ -131,9 +131,9 @@ function LiveTabRow({ tab, spaces, onMoveToSpace }: RowProps) {
             }
           : undefined
       }
-      className={`group flex items-center gap-2 px-3 py-1.5 text-sm cursor-pointer hover:bg-slate-50 transition-colors ${
-        tab.restorable ? 'text-slate-800' : 'text-slate-400'
-      } ${tab.active ? 'bg-slate-50 border-l-2 border-teal-600 -ml-[2px] pl-[14px]' : ''}`}
+      className={`group flex items-center gap-2 px-3 py-1.5 text-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors ${
+        tab.restorable ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400 dark:text-slate-500'
+      } ${tab.active ? 'bg-slate-50 dark:bg-slate-800 border-l-2 border-teal-600 -ml-[2px] pl-[14px]' : ''}`}
       onClick={() => activateTab(tab.id)}
     >
       {showFavicon ? (
@@ -146,7 +146,7 @@ function LiveTabRow({ tab, spaces, onMoveToSpace }: RowProps) {
       ) : (
         <span className="w-4 h-4 flex-shrink-0 rounded-sm bg-slate-200" />
       )}
-      {tab.pinned && <Pin className="w-3 h-3 text-slate-400 flex-shrink-0" />}
+      {tab.pinned && <Pin className="w-3 h-3 text-slate-400 dark:text-slate-500 flex-shrink-0" />}
       <span className="flex-1 truncate text-[13px]">{tab.title || tab.url}</span>
       <div className="flex items-center gap-0.5">
         {canMove && (
@@ -157,7 +157,7 @@ function LiveTabRow({ tab, spaces, onMoveToSpace }: RowProps) {
               if (moveOpen) setMoveOpen(false)
               else openMenu()
             }}
-            className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-opacity duration-150"
+            className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-opacity duration-150"
             title={t('moveToSpaceLive')}
             aria-label={t('moveToSpaceLive')}
           >
@@ -170,7 +170,7 @@ function LiveTabRow({ tab, spaces, onMoveToSpace }: RowProps) {
               e.stopPropagation()
               void closeTab(tab.id)
             }}
-            className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-opacity duration-150"
+            className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded text-slate-400 dark:text-slate-500 hover:text-red-600 hover:bg-red-50 transition-opacity duration-150"
             title={t('closeTab')}
             aria-label={t('closeTab')}
           >
@@ -182,11 +182,11 @@ function LiveTabRow({ tab, spaces, onMoveToSpace }: RowProps) {
         createPortal(
           <div
             ref={menuRef}
-            className="fixed w-44 bg-white border border-slate-200 rounded-lg shadow-lg z-50 overflow-hidden"
+            className="fixed w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-50 overflow-hidden"
             style={{ top: menuPos.top, right: menuPos.right }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-100">
+            <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800">
               {t('moveTo')}
             </div>
             <div className="max-h-56 overflow-y-auto">
@@ -198,7 +198,7 @@ function LiveTabRow({ tab, spaces, onMoveToSpace }: RowProps) {
                     onMoveToSpace(tab.id, s.id)
                     setMoveOpen(false)
                   }}
-                  className="block w-full text-left px-2 py-1.5 text-xs hover:bg-slate-50 truncate text-slate-700"
+                  className="block w-full text-left px-2 py-1.5 text-xs hover:bg-slate-50 dark:hover:bg-slate-800 truncate text-slate-700 dark:text-slate-200"
                 >
                   {s.name}
                 </button>
