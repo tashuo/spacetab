@@ -1,0 +1,103 @@
+{
+  "format": "spacetab-export",
+  "formatVersion": 1,
+  "exportedAt": 1747008000000,
+  "app": "SpaceTab",
+  "db": {
+    "version": 1,
+    "spaces": [
+      {
+        "id": "demo-engineering",
+        "name": "Engineering",
+        "emoji": "💻",
+        "note": "Frontend project + tooling. Cmd-click to multi-select, Shift-click for ranges.",
+        "pinned": true,
+        "createdAt": 1746604800000,
+        "updatedAt": 1747008000000,
+        "groups": [
+          { "key": "g1", "title": "Frontend", "color": "blue" },
+          { "key": "g2", "title": "Docs", "color": "yellow" }
+        ],
+        "tabs": [
+          { "url": "https://github.com/", "title": "GitHub", "favIconUrl": "https://www.google.com/s2/favicons?domain=github.com&sz=64" },
+          { "url": "https://linear.app/", "title": "Linear — A modern issue tracker", "favIconUrl": "https://www.google.com/s2/favicons?domain=linear.app&sz=64" },
+          { "url": "https://react.dev/", "title": "React — The library for web and native UIs", "favIconUrl": "https://www.google.com/s2/favicons?domain=react.dev&sz=64", "groupKey": "g1" },
+          { "url": "https://vite.dev/", "title": "Vite — Next Generation Frontend Tooling", "favIconUrl": "https://www.google.com/s2/favicons?domain=vite.dev&sz=64", "groupKey": "g1" },
+          { "url": "https://tailwindcss.com/", "title": "Tailwind CSS — Rapidly build modern websites", "favIconUrl": "https://www.google.com/s2/favicons?domain=tailwindcss.com&sz=64", "groupKey": "g1" },
+          { "url": "https://vercel.com/", "title": "Vercel — Develop. Preview. Ship.", "favIconUrl": "https://www.google.com/s2/favicons?domain=vercel.com&sz=64", "groupKey": "g1" },
+          { "url": "https://developer.mozilla.org/", "title": "MDN Web Docs", "favIconUrl": "https://www.google.com/s2/favicons?domain=developer.mozilla.org&sz=64", "groupKey": "g2" },
+          { "url": "https://web.dev/", "title": "web.dev — Guidance for modern web development", "favIconUrl": "https://www.google.com/s2/favicons?domain=web.dev&sz=64", "groupKey": "g2" },
+          { "url": "https://caniuse.com/", "title": "Can I use… Support tables for HTML5/CSS3/etc", "favIconUrl": "https://www.google.com/s2/favicons?domain=caniuse.com&sz=64", "groupKey": "g2" },
+          { "url": "https://stackoverflow.com/", "title": "Stack Overflow — Where Developers Learn & Share", "favIconUrl": "https://www.google.com/s2/favicons?domain=stackoverflow.com&sz=64" }
+        ]
+      },
+      {
+        "id": "demo-design",
+        "name": "Design Inspiration",
+        "emoji": "🎨",
+        "note": "Daily inspiration & color palettes",
+        "createdAt": 1746604800000,
+        "updatedAt": 1746921600000,
+        "tabs": [
+          { "url": "https://dribbble.com/", "title": "Dribbble — Discover the World's Top Designers", "favIconUrl": "https://www.google.com/s2/favicons?domain=dribbble.com&sz=64" },
+          { "url": "https://www.behance.net/", "title": "Behance — Best of design, illustration, photography", "favIconUrl": "https://www.google.com/s2/favicons?domain=behance.net&sz=64" },
+          { "url": "https://www.awwwards.com/", "title": "Awwwards — Website Awards", "favIconUrl": "https://www.google.com/s2/favicons?domain=awwwards.com&sz=64" },
+          { "url": "https://coolors.co/", "title": "Coolors — The super fast color palette generator", "favIconUrl": "https://www.google.com/s2/favicons?domain=coolors.co&sz=64" },
+          { "url": "https://unsplash.com/", "title": "Unsplash — Beautiful Free Images", "favIconUrl": "https://www.google.com/s2/favicons?domain=unsplash.com&sz=64" },
+          { "url": "https://www.figma.com/community/", "title": "Figma Community", "favIconUrl": "https://www.google.com/s2/favicons?domain=figma.com&sz=64" },
+          { "url": "https://www.pinterest.com/", "title": "Pinterest", "favIconUrl": "https://www.google.com/s2/favicons?domain=pinterest.com&sz=64" }
+        ]
+      },
+      {
+        "id": "demo-ai",
+        "name": "AI Tools",
+        "emoji": "🤖",
+        "note": "Daily AI assistants",
+        "createdAt": 1746518400000,
+        "updatedAt": 1746835200000,
+        "tabs": [
+          { "url": "https://claude.ai/", "title": "Claude", "favIconUrl": "https://www.google.com/s2/favicons?domain=claude.ai&sz=64" },
+          { "url": "https://chatgpt.com/", "title": "ChatGPT", "favIconUrl": "https://www.google.com/s2/favicons?domain=chatgpt.com&sz=64" },
+          { "url": "https://www.perplexity.ai/", "title": "Perplexity AI", "favIconUrl": "https://www.google.com/s2/favicons?domain=perplexity.ai&sz=64" },
+          { "url": "https://v0.dev/", "title": "v0 by Vercel", "favIconUrl": "https://www.google.com/s2/favicons?domain=v0.dev&sz=64" },
+          { "url": "https://huggingface.co/", "title": "Hugging Face — The AI community", "favIconUrl": "https://www.google.com/s2/favicons?domain=huggingface.co&sz=64" },
+          { "url": "https://openrouter.ai/", "title": "OpenRouter — One API for any model", "favIconUrl": "https://www.google.com/s2/favicons?domain=openrouter.ai&sz=64" },
+          { "url": "https://replicate.com/", "title": "Replicate — Run AI with an API", "favIconUrl": "https://www.google.com/s2/favicons?domain=replicate.com&sz=64" }
+        ]
+      },
+      {
+        "id": "demo-reading",
+        "name": "Reading",
+        "emoji": "📚",
+        "note": "Long-reads & industry news",
+        "createdAt": 1746432000000,
+        "updatedAt": 1746748800000,
+        "tabs": [
+          { "url": "https://news.ycombinator.com/", "title": "Hacker News", "favIconUrl": "https://www.google.com/s2/favicons?domain=news.ycombinator.com&sz=64" },
+          { "url": "https://en.wikipedia.org/wiki/Tab_(GUI)", "title": "Tab (GUI) — Wikipedia", "favIconUrl": "https://www.google.com/s2/favicons?domain=en.wikipedia.org&sz=64" },
+          { "url": "https://www.theverge.com/", "title": "The Verge", "favIconUrl": "https://www.google.com/s2/favicons?domain=theverge.com&sz=64" },
+          { "url": "https://arstechnica.com/", "title": "Ars Technica", "favIconUrl": "https://www.google.com/s2/favicons?domain=arstechnica.com&sz=64" },
+          { "url": "https://medium.com/", "title": "Medium — Where good ideas find you", "favIconUrl": "https://www.google.com/s2/favicons?domain=medium.com&sz=64" },
+          { "url": "https://substack.com/", "title": "Substack — A new economic engine for culture", "favIconUrl": "https://www.google.com/s2/favicons?domain=substack.com&sz=64" },
+          { "url": "https://techcrunch.com/", "title": "TechCrunch", "favIconUrl": "https://www.google.com/s2/favicons?domain=techcrunch.com&sz=64" }
+        ]
+      },
+      {
+        "id": "demo-shopping",
+        "name": "Shopping",
+        "emoji": "🛒",
+        "note": "Wishlist & gift ideas",
+        "createdAt": 1746345600000,
+        "updatedAt": 1746576000000,
+        "tabs": [
+          { "url": "https://www.apple.com/", "title": "Apple", "favIconUrl": "https://www.google.com/s2/favicons?domain=apple.com&sz=64" },
+          { "url": "https://www.amazon.com/", "title": "Amazon.com", "favIconUrl": "https://www.google.com/s2/favicons?domain=amazon.com&sz=64" },
+          { "url": "https://www.ikea.com/", "title": "IKEA — Affordable, well-designed home furnishings", "favIconUrl": "https://www.google.com/s2/favicons?domain=ikea.com&sz=64" },
+          { "url": "https://www.airbnb.com/", "title": "Airbnb — Vacation rentals & experiences", "favIconUrl": "https://www.google.com/s2/favicons?domain=airbnb.com&sz=64" },
+          { "url": "https://www.etsy.com/", "title": "Etsy — Shop for anything from creative people", "favIconUrl": "https://www.google.com/s2/favicons?domain=etsy.com&sz=64" },
+          { "url": "https://www.target.com/", "title": "Target — Expect More. Pay Less.", "favIconUrl": "https://www.google.com/s2/favicons?domain=target.com&sz=64" }
+        ]
+      }
+    ]
+  }
+}

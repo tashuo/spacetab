@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import type { Space } from '@/lib/schema'
 import { colorForSpace, relativeTime } from '@/lib/ui-utils'
 import { useT } from '@/lib/i18n'
-import { ArrowRight, Copy, FileText, GripVertical, Pencil, Search, Sparkle, Star, StarFilled, Trash, X } from './icons'
+import { ArrowRight, ChevronDown, Copy, FileText, GripVertical, Pencil, Search, Sparkle, Star, StarFilled, Trash, X } from './icons'
 import { SpaceTabRow } from './space-tab-row'
 import { filterSpaceTabs } from '@/lib/search'
 import { GROUP_COLOR_BAR } from '@/lib/tab-groups'
@@ -56,6 +56,7 @@ export function SpaceItem({
   const { t } = useT()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(space.name)
+  const [collapsed, setCollapsed] = useState(false)
   const [dragKind, setDragKind] = useState<DragKind>(null)
   // 空间内本地搜索:点放大镜展开
   const [cardQuery, setCardQuery] = useState('')
@@ -369,6 +370,17 @@ export function SpaceItem({
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCollapsed((v) => !v)}
+                className="w-5 h-5 -ml-1 flex items-center justify-center rounded text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex-shrink-0"
+                title={collapsed ? t('expand') : t('collapse')}
+                aria-label={collapsed ? t('expand') : t('collapse')}
+                aria-expanded={!collapsed}
+              >
+                <ChevronDown
+                  className={`w-3.5 h-3.5 transition-transform duration-150 ${collapsed ? '-rotate-90' : ''}`}
+                />
+              </button>
               {space.emoji ? (
                 <span className="text-base leading-none flex-shrink-0 transition-transform duration-200 group-hover/card:scale-110" aria-hidden>{space.emoji}</span>
               ) : (
@@ -522,7 +534,7 @@ export function SpaceItem({
         </div>
 
         {/* 空间内搜索框(展开时显示) */}
-        {cardSearchOpen && space.tabs.length > 1 && (
+        {!collapsed && cardSearchOpen && space.tabs.length > 1 && (
           <div className="mt-3 relative">
             <input
               ref={cardSearchInputRef}
@@ -550,7 +562,7 @@ export function SpaceItem({
         )}
 
         {/* 选区批量操作栏 */}
-        {selectedSet.size > 0 && (
+        {!collapsed && selectedSet.size > 0 && (
           <div className="mt-3 flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
             <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-emerald-500 text-white text-[10px] font-semibold">
               {selectedSet.size}
@@ -613,8 +625,8 @@ export function SpaceItem({
             document.body,
           )}
 
-        {/* 标签列表 */}
-        {visibleSpace.tabs.length > 0 ? (
+        {/* 标签列表(收起时整段不渲染) */}
+        {collapsed ? null : visibleSpace.tabs.length > 0 ? (
           <div className="mt-3 space-y-0.5">
             {visibleSpace.tabs.map((tab, i) => (
               <SpaceTabRow
