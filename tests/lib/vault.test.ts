@@ -221,6 +221,32 @@ describe('switchToSpace', () => {
     const urls = focusedTabs.map((t: chrome.tabs.Tab) => t.url)
     expect(urls).toContain('https://space-a.com/')
   })
+
+  it('drops orphan vaulted tabs whose URLs are no longer in the target space', async () => {
+    // 模拟用户场景:在 manager 把 t2 从 A 移到 B,但 session state 里 A 还挂着 t2 的 tabId。
+    // 切回 A 时,孤儿应该被关掉 + 解绑,而不是搬回焦点窗口。
+    await seedFocusedWindow([
+      { url: 'https://kept.com/' },
+      { url: 'https://moved-away.com/' },
+    ])
+    await archiveCurrentWindowToSpace('space-A')
+    await switchToSpace('space-other', [])
+
+    // 此时 space-A 在 session state 里仍挂着两条 tabId,vault 里也有这俩标签
+    // 但用户已经在 manager 里把 'moved-away' 移走 → 调用方传的 toSpaceTabs 只剩 'kept'
+    await switchToSpace('space-A', [{ url: 'https://kept.com/', title: 'kept' }])
+
+    const focusedTabs = await fakeBrowser.tabs.query({ windowId: FOCUSED_WIN })
+    const urls = focusedTabs.map((t: chrome.tabs.Tab) => t.url)
+    expect(urls).toContain('https://kept.com/')
+    expect(urls).not.toContain('https://moved-away.com/')
+
+    // session state 中不应再挂着孤儿 tabId
+    const finalState = await readSessionState()
+    const finalIds = finalState.spaceIdToTabIds['space-A'] ?? []
+    // 现在只有 'kept' 那条 tabId 还属于 A
+    expect(finalIds.length).toBe(1)
+  })
 })
 
 // ---------------------------------------------------------------------------

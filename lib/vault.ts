@@ -170,23 +170,19 @@ export async function switchToSpace(
     }
   }
 
-  // Bring this space's still-alive vaulted tabs back into focused window
+  // 先检查目标空间在 vault 里挂着的所有 tabId,按 URL 校对是否还属于该空间。
+  // 用户在 manager 里删 / 跨空间移动后,DB 已经反映新状态,但 session state 里的
+  // tabId 标记还没被清理 — 这里是关键的一致性兜底。
   const knownIds = state.spaceIdToTabIds[toSpaceId] ?? []
   const aliveKnownIds = await filterAlive(knownIds)
-  if (aliveKnownIds.length > 0) {
-    try {
-      await chrome.tabs.move(aliveKnownIds, { windowId: focusedId, index: -1 })
-    } catch {
-      // ignore — fall through; URLs will get discarded-created below
-    }
-  }
-
-  // For URLs not represented by an alive vaulted tab, create them via discarded-create
+  const wantedUrls = new Set(toSpaceTabs.map((tt) => tt.url))
   const liveUrls = new Set<string>()
+  const wantedKnownIds: number[] = []
+  const orphanKnownIds: number[] = []
   // url → groupKey,从 space 的 tabs 里抽出来,用于把 chrome tabId 归到分组桶
   const urlToKey = new Map<string, string>()
-  for (const t of toSpaceTabs) {
-    if (t.groupKey) urlToKey.set(t.url, t.groupKey)
+  for (const tt of toSpaceTabs) {
+    if (tt.groupKey) urlToKey.set(tt.url, tt.groupKey)
   }
   const tabIdsByKey = new Map<string, number[]>()
   const pushBucket = (key: string, id: number) => {
@@ -194,19 +190,37 @@ export async function switchToSpace(
     if (arr) arr.push(id)
     else tabIdsByKey.set(key, [id])
   }
-
-  if (aliveKnownIds.length > 0) {
-    for (const id of aliveKnownIds) {
-      try {
-        const tab = await chrome.tabs.get(id)
-        if (tab.url) {
-          liveUrls.add(tab.url)
-          const k = urlToKey.get(tab.url)
-          if (k) pushBucket(k, id)
-        }
-      } catch {
-        // ignore
+  for (const id of aliveKnownIds) {
+    try {
+      const tab = await chrome.tabs.get(id)
+      if (tab.url && wantedUrls.has(tab.url)) {
+        wantedKnownIds.push(id)
+        liveUrls.add(tab.url)
+        const k = urlToKey.get(tab.url)
+        if (k) pushBucket(k, id)
+      } else {
+        orphanKnownIds.push(id)
       }
+    } catch {
+      orphanKnownIds.push(id)
+    }
+  }
+
+  // 把仍然属于该空间的 tab 搬回可见窗口
+  if (wantedKnownIds.length > 0) {
+    try {
+      await chrome.tabs.move(wantedKnownIds, { windowId: focusedId, index: -1 })
+    } catch {
+      // ignore — 后面的 create 路径会兜
+    }
+  }
+
+  // 孤儿:用户在 manager 里把它们移走 / 删了,直接关掉
+  if (orphanKnownIds.length > 0) {
+    try {
+      await chrome.tabs.remove(orphanKnownIds)
+    } catch {
+      // 关失败也无所谓,最坏情况下用户多看到几条标签
     }
   }
 
@@ -236,17 +250,25 @@ export async function switchToSpace(
     await restoreGroupsForTabs(focusedId, tabIdsByKey, toSpaceGroups)
   }
 
-  if (newlyCreatedIds.length > 0) {
-    const fresh = await readSessionState()
-    await writeSessionState({
-      ...tagTabIdsForSpace(fresh, toSpaceId, newlyCreatedIds),
-      currentSpaceId: toSpaceId,
-    })
-  } else {
-    const fresh = await readSessionState()
-    if (fresh.currentSpaceId !== toSpaceId) {
-      await writeSessionState({ ...fresh, currentSpaceId: toSpaceId })
+  // 一次性把 session state 写定:
+  //   1) 解绑刚才识别出的孤儿 tabId
+  //   2) 把新创建的 tab 标到该空间
+  //   3) 把当前空间 id 设为 toSpaceId(用于后续的撤销切换)
+  let next = await readSessionState()
+  if (orphanKnownIds.length > 0) {
+    for (const id of orphanKnownIds) {
+      next = untagTabIdInState(next, id)
     }
+  }
+  if (newlyCreatedIds.length > 0) {
+    next = tagTabIdsForSpace(next, toSpaceId, newlyCreatedIds)
+  }
+  if (
+    orphanKnownIds.length > 0 ||
+    newlyCreatedIds.length > 0 ||
+    next.currentSpaceId !== toSpaceId
+  ) {
+    await writeSessionState({ ...next, currentSpaceId: toSpaceId })
   }
 
   return { failed, fromSpaceId }
