@@ -1,200 +1,313 @@
-# Chrome Web Store Listing Copy
+# SpaceTab — Chrome Web Store Listing (v1.0.0)
 
-Reference text for filling out the Chrome Web Store dashboard. Each
-language has a short summary (≤132 characters) and a detailed
-description (~1500 characters max).
+Canonical copy for the Chrome Web Store dashboard. Edit here, paste there.
+
+---
+
+## Category
+
+**Productivity**
+
+## Privacy policy URL
+
+`https://github.com/tashuo/spacetab/blob/main/PRIVACY.md`
+
+## Single-purpose statement
+
+> SpaceTab organises your browser tabs into named project spaces and switches between them instantly via a local hidden window, so a busy session can be parked and resumed without re-loading every tab.
+
+Short fallback (≤140 chars):
+
+> Organise Chrome tabs into project spaces and switch between them instantly, all stored locally.
 
 ---
 
 ## English (en)
 
-### Single Purpose
-A tab manager that organises browser tabs into named project spaces and switches between them instantly via a hidden vault window.
+### Short summary (132-char limit)
+> Organize tabs into project spaces. Switch instantly. Local-only, open source. Smart archive, tab groups, ⌘K palette.
 
-### Short summary (132 chars max)
-> Project spaces for your tabs. Switch instantly between named workspaces. Local-first — no account, no telemetry.
+(115 chars)
 
 ### Detailed description
 
-SpaceTab turns your tab chaos into named project spaces, like Workona — but local-first, free, and private.
+```
+SpaceTab turns your sea of open tabs into named project spaces — Engineering, Reading, Shopping, anything — and switches between them in milliseconds.
 
-**Why it's different**
-• Switching is instant. Tabs from inactive spaces stay loaded in a hidden vault window, so switching is a tab move (not a reload).
-• 100% local. All data lives in your browser's local storage. Zero network requests. No account, no telemetry, no ads.
-• Smart archive. One click auto-clusters your current window's tabs by category — Development, Design, Mail, AI, Cloud, and more — into multiple spaces.
-• Drag-friendly. Drag tabs between spaces, drag current-window tabs into a space, or drag a whole space onto another to merge them.
-• Multi-language. UI in Simplified Chinese, Traditional Chinese, English, Japanese, and German.
+✨ INSTANT SWITCHING
+Inactive spaces sit in a hidden Chrome window, fully loaded. Switching swaps tabs between this vault and your visible window — no re-fetching, no waiting, no losing scroll position.
 
-**Five-step workflow**
-1. Click the SpaceTab icon → the manager opens (pinned to your tab strip).
-2. Click "Archive current window" to save your tabs as your first space.
-3. Click "Smart archive" to auto-organise into multiple categorised spaces.
-4. Click any space's "Switch" button to bring its tabs back instantly.
-5. Drag tabs and spaces around to reorganise.
+🧠 SMART ARCHIVE
+One click clusters your current window's tabs by domain into suggested spaces. Review, rename, confirm.
 
-**Permissions**
-• tabs — read tab URLs/titles and move them between windows for the vault.
-• storage — save your spaces locally.
+🎨 CHROME TAB GROUPS PRESERVED
+Group color and title round-trip through archive and switch. Your visual organisation survives.
 
-That's it. No host permissions, no scripts injected, no broad access.
+⌨️ COMMAND PALETTE (⌘K)
+Switch spaces, toggle theme, archive, import/export — every action one keystroke away.
 
-**Backup & transfer**
-Settings → Export JSON to back up. Import JSON on another device for manual sync.
+✅ POWER FEATURES
+• Multi-select tabs (⌘/Ctrl+click, Shift+click for ranges) — bulk open, move, delete
+• Discard inactive tabs to free RAM (single tab or all at once)
+• Pin spaces; emoji + note per space; manual reorder by drag
+• Drop tabs across spaces, drop spaces onto each other to merge
+• Cross-space search + per-space search
+• 8-second "undo" after every space switch
+• Light, dark, and system themes
+• 5 languages: English, 简体中文, 繁體中文, 日本語, Deutsch
+• JSON export/import — your data is portable
 
-Open source. Privacy policy and source code linked from the listing.
+🔒 PRIVACY-FIRST
+SpaceTab does not collect, transmit, or sell anything. No telemetry, no analytics, no servers. Your spaces live in chrome.storage.local on this device.
+
+🆓 OPEN SOURCE
+MIT licensed. Audit the code, file issues, contribute features:
+https://github.com/tashuo/spacetab
+
+WHY ANOTHER TAB MANAGER
+SpaceTab sits between OneTab (lightweight collector) and Workona (heavyweight workspace SaaS). Opinionated about a single workflow — project spaces with instant switching — and refuses to add accounts, sync, or paywalls.
+```
 
 ---
 
 ## 简体中文 (zh-CN)
 
-### 单一用途
-一款标签管理扩展,把浏览器标签按"项目空间"组织,通过隐藏窗口实现瞬间切换。
-
-### 简短描述(最长 132 字符)
-> 用项目空间管理标签。瞬间切换工作场景。本地优先——无账号、无追踪。
+### 简短描述(132 字符上限)
+> 把标签整理成项目空间,瞬间切换。完全本地、开源免费。智能归档、保留 Chrome 标签组、⌘K 命令面板。
 
 ### 详细描述
 
-SpaceTab 把你混乱的标签变成命名的项目空间,体验像 Workona,但本地优先、免费、隐私。
+```
+SpaceTab 把你一团乱的标签整理成命名的「项目空间」(工作 / 阅读 / 购物 / 任意主题),并在毫秒内切换。
 
-**它的不同**
-• 瞬间切换。非活动空间的标签存在一个隐藏窗口里持续加载,切换 = 把真实标签在窗口间搬动,不重新加载。
-• 100% 本地。所有数据存在浏览器本地存储,零网络请求,无账号、无统计、无广告。
-• 智能归档。一键按域名/类别(开发、设计、邮件、AI、云服务等)自动把当前窗口的标签分组,确认后一次创建多个空间。
-• 拖拽友好。空间间拖动单标签,把当前窗口的标签拖进空间,或者用拖动手柄把整个空间合并到另一个。
-• 多语言。简体中文、繁体中文、英文、日文、德文五语界面。
+✨ 瞬间切换
+非活动空间装在一个隐藏的 Chrome 窗口里,完全加载。切换 = 在这个 vault 和你的可见窗口之间搬动标签 — 不重新加载、不等待、不丢失滚动位置。
 
-**五步上手**
-1. 点 SpaceTab 图标 → manager 打开(固定到标签栏左侧)。
-2. 点"归档当前窗口"创建第一个空间。
-3. 点"智能归档"自动按类别分组生成多个空间。
-4. 点任意空间的"切换"按钮把它的标签瞬间拉回当前窗口。
-5. 拖拽标签和空间随时重组。
+🧠 智能归档
+一键把当前窗口的标签按域名聚类成建议空间 — 检查、重命名、确认。
 
-**权限**
-• tabs —— 读标签 URL/标题,在窗口间搬移标签以实现 vault 功能。
-• storage —— 本地保存你的空间数据。
+🎨 Chrome 标签组保留
+分组颜色和标题在归档和切换时来回保留,视觉组织不丢失。
 
-仅此两项。不申请站点权限,不注入脚本,不要广泛访问。
+⌨️ 命令面板(⌘K)
+切换空间、切换主题、归档、导入 / 导出 — 一切都在一个按键之间。
 
-**备份与转移**
-设置 → 导出 JSON 备份;在另一台设备用 导入 JSON 手动同步。
+✅ 进阶功能
+• 多选标签(⌘/Ctrl+点击切换、Shift+点击选区间)— 批量打开 / 移动 / 删除
+• 休眠非活动标签释放内存(单个或全部一次)
+• 空间置顶;每空间 emoji + 备注;拖拽手动排序
+• 跨空间拖标签,空间卡互相拖动合并
+• 全局搜索 + 空间内搜索
+• 切换后 8 秒内可一键撤销
+• 浅色、深色、跟随系统三种主题
+• 5 语言:English、简体中文、繁體中文、日本語、Deutsch
+• JSON 导出 / 导入 — 数据是你自己的
 
-开源。隐私政策和源代码链接见详情页。
+🔒 隐私优先
+SpaceTab 不收集、不上传、不出售任何数据。没有埋点、没有分析、没有服务器。所有空间存在你设备的 chrome.storage.local 里。
+
+🆓 开源免费
+MIT 协议。审计代码、提 issue、贡献功能:
+https://github.com/tashuo/spacetab
+
+为什么再做一个标签管理器
+SpaceTab 处在 OneTab(轻量收纳)和 Workona(重型工作流 SaaS)之间。它对单一工作流很有主张 — 项目空间 + 瞬间切换 — 并坚决拒绝加账号系统、云同步、付费墙。
+```
 
 ---
 
 ## 繁體中文 (zh-TW)
 
-### 單一用途
-一款分頁管理擴充功能,將瀏覽器分頁依「專案空間」組織,透過隱藏視窗實現瞬間切換。
-
-### 簡短描述(最長 132 字元)
-> 用專案空間管理分頁。瞬間切換工作場景。本地優先——無帳號、無追蹤。
+### 簡短描述(132 字元上限)
+> 把分頁整理成專案空間,瞬間切換。完全本地、開源免費。智慧封存、保留 Chrome 分頁群組、⌘K 命令面板。
 
 ### 詳細描述
 
-SpaceTab 把你混亂的分頁變成命名的專案空間,體驗像 Workona,但本地優先、免費、隱私。
+```
+SpaceTab 把你一團亂的分頁整理成命名的「專案空間」(工作 / 閱讀 / 購物 / 任意主題),並在毫秒內切換。
 
-**獨特之處**
-• 瞬間切換。非活動空間的分頁存在一個隱藏視窗裡持續載入,切換 = 把真實分頁在視窗間搬動,而非重新載入。
-• 100% 本地。所有資料存在瀏覽器本地儲存,零網路請求,無帳號、無統計、無廣告。
-• 智慧封存。一鍵按網域/類別(開發、設計、郵件、AI、雲端服務等)自動把目前視窗的分頁分組,確認後一次建立多個空間。
-• 拖曳友善。空間間拖曳單分頁、把目前視窗的分頁拖進空間,或用拖曳把手把整個空間合併到另一個。
-• 多語言。簡體中文、繁體中文、英文、日文、德文五語介面。
+✨ 瞬間切換
+非活動空間裝在一個隱藏的 Chrome 視窗裡,完全載入。切換 = 在這個 vault 和你的可見視窗之間搬動分頁 — 不重新載入、不等待、不丟失捲動位置。
 
-**五步上手**
-1. 點 SpaceTab 圖示 → manager 開啟(固定到分頁列左側)。
-2. 點「封存目前視窗」建立第一個空間。
-3. 點「智慧封存」自動按類別分組產生多個空間。
-4. 點任意空間的「切換」按鈕把分頁瞬間拉回目前視窗。
-5. 拖曳分頁和空間隨時重組。
+🧠 智慧封存
+一鍵把目前視窗的分頁按網域聚類成建議空間 — 檢查、重新命名、確認。
 
-**權限**
-• tabs —— 讀取分頁 URL/標題,在視窗間搬移分頁以實現 vault 功能。
-• storage —— 本地儲存你的空間資料。
+🎨 Chrome 分頁群組保留
+群組顏色和標題在封存和切換時來回保留,視覺組織不丟失。
 
-僅此兩項。不申請網站權限,不注入腳本,不要求廣泛存取。
+⌨️ 命令面板(⌘K)
+切換空間、切換主題、封存、匯入 / 匯出 — 一切都在一個按鍵之間。
 
-**備份與轉移**
-設定 → 匯出 JSON 備份;在另一台裝置用 匯入 JSON 手動同步。
+✅ 進階功能
+• 多選分頁(⌘/Ctrl+點擊切換、Shift+點擊選區間)— 批次打開 / 移動 / 刪除
+• 休眠非作用中分頁釋放記憶體(單個或全部一次)
+• 空間置頂;每空間 emoji + 備註;拖曳手動排序
+• 跨空間拖分頁,空間卡互相拖曳合併
+• 全域搜尋 + 空間內搜尋
+• 切換後 8 秒內可一鍵復原
+• 淺色、深色、跟隨系統三種主題
+• 5 語言:English、简体中文、繁體中文、日本語、Deutsch
+• JSON 匯出 / 匯入 — 資料是你自己的
 
-開源。隱私政策和原始碼連結見詳情頁。
+🔒 隱私優先
+SpaceTab 不收集、不上傳、不出售任何資料。沒有埋點、沒有分析、沒有伺服器。所有空間存在你裝置的 chrome.storage.local 裡。
+
+🆓 開源免費
+MIT 協議。審計程式碼、開 issue、貢獻功能:
+https://github.com/tashuo/spacetab
+```
 
 ---
 
 ## 日本語 (ja)
 
-### 単一目的
-ブラウザのタブを「プロジェクトスペース」に整理し、隠しウィンドウを使って瞬時に切り替える拡張機能。
-
 ### 短い説明(最大 132 文字)
-> プロジェクトスペースでタブを管理。ワークスペース間を瞬時に切り替え。ローカル優先 — アカウント不要、追跡なし。
+> タブをプロジェクトスペースに整理し瞬時に切り替え。完全ローカル、オープンソース。スマート保存・タブグループ保持・⌘K パレット。
 
 ### 詳細説明
 
-SpaceTab はタブの混雑を、名前付きのプロジェクトスペースに変えます。Workona に似た体験を、ローカル優先・無料・プライバシー重視で。
+```
+SpaceTab はタブの混雑を、名前付きのプロジェクトスペース(仕事 / 読書 / 買い物 / 任意のテーマ)に変え、ミリ秒で切り替えます。
 
-**特徴**
-• 瞬時の切り替え。非アクティブなスペースのタブを隠しウィンドウで生かしておくため、切り替えは再読み込みではなくウィンドウ間のタブ移動です。
-• 100% ローカル。すべてのデータはブラウザのローカルストレージに保存。ネットワーク通信なし、アカウントなし、テレメトリなし、広告なし。
-• スマート保存。ワンクリックで現在のウィンドウのタブを開発・デザイン・メール・AI・クラウドなどのカテゴリに自動分類し、複数のスペースを作成。
-• ドラッグ操作。スペース間でタブをドラッグ、現在のウィンドウのタブをスペースへ、スペース全体を別のカードへドラッグして統合。
-• 多言語。簡体字中国語、繁体字中国語、英語、日本語、ドイツ語の 5 言語。
+✨ 瞬時の切り替え
+非アクティブなスペースは隠しウィンドウに完全に読み込まれた状態で待機。切り替えは vault と表示中ウィンドウの間でタブを移動するだけ — 再読み込みなし、待ち時間なし、スクロール位置も失われません。
 
-**5 ステップ**
-1. SpaceTab アイコンをクリック → manager が開く(タブストリップに固定)。
-2. 「現在のウィンドウを保存」で最初のスペースを作成。
-3. 「スマート保存」でカテゴリ別の複数スペースを自動生成。
-4. スペースの「切り替え」ボタンでタブを瞬時に呼び戻す。
-5. タブやスペースをドラッグして自由に再構成。
+🧠 スマート保存
+ワンクリックで現在のウィンドウのタブをドメイン別にクラスタリングして候補スペースを生成。確認・リネーム・確定。
 
-**権限**
-• tabs — タブの URL/タイトル読み取りと、vault 機能のためのウィンドウ間移動。
-• storage — スペースデータのローカル保存。
+🎨 Chrome タブグループ保持
+グループの色とタイトルは保存と切り替えのラウンドトリップで保持されます。視覚的な整理が失われません。
 
-これだけ。サイト権限・スクリプト注入・広範なアクセス権は要求しません。
+⌨️ コマンドパレット(⌘K)
+スペース切替、テーマ切替、保存、インポート / エクスポート — すべてキーストローク 1 つで。
 
-**バックアップと転送**
-設定 → JSON エクスポートでバックアップ。他のデバイスで JSON インポートして手動同期。
+✅ 高度な機能
+• タブの複数選択(⌘/Ctrl+クリック、Shift+クリックで範囲)— 一括で開く・移動・削除
+• 非アクティブタブをスリープしてメモリを解放(単一または一括)
+• スペースのピン留め;スペースごとの emoji + メモ;ドラッグで並べ替え
+• スペース間のタブのドラッグ、スペース同士のドラッグで統合
+• グローバル検索 + スペース内検索
+• 切り替え後 8 秒以内にワンクリックで「元に戻す」
+• ライト・ダーク・システムの 3 テーマ
+• 5 言語:English、简体中文、繁體中文、日本語、Deutsch
+• JSON エクスポート / インポート — データはあなたのもの
 
-オープンソース。プライバシーポリシーとソースコードへのリンクは詳細ページに。
+🔒 プライバシー優先
+SpaceTab はデータを収集・送信・販売しません。テレメトリなし、アナリティクスなし、サーバーなし。すべてのスペースはこの端末の chrome.storage.local に保存されます。
+
+🆓 オープンソース
+MIT ライセンス。コードを監査、issue を立てる、機能を貢献:
+https://github.com/tashuo/spacetab
+```
 
 ---
 
 ## Deutsch (de)
 
-### Einziger Zweck
-Tab-Manager, der Browser-Tabs in benannte Projekt-Bereiche organisiert und über ein verstecktes Vault-Fenster sofort zwischen ihnen wechselt.
-
 ### Kurzbeschreibung (max. 132 Zeichen)
-> Projekt-Bereiche für deine Tabs. Sofortiges Wechseln. Lokal – ohne Konto, ohne Tracking.
+> Tabs in Projekt-Bereiche organisieren. Sofortiges Wechseln. Lokal, Open Source. Smart Archive, Tab-Gruppen, ⌘K Palette.
 
 ### Ausführliche Beschreibung
 
-SpaceTab verwandelt das Tab-Chaos in benannte Projekt-Bereiche — ähnlich Workona, aber lokal-first, kostenlos und datenschutzfreundlich.
+```
+SpaceTab verwandelt dein Tab-Chaos in benannte Projekt-Bereiche (Arbeit, Lesen, Shopping — was du willst) und wechselt in Millisekunden zwischen ihnen.
 
-**Was es ausmacht**
-• Sofortiges Wechseln. Tabs inaktiver Bereiche bleiben in einem versteckten Vault-Fenster geladen — Wechseln ist eine Tab-Verschiebung, kein Neuladen.
-• 100% lokal. Alle Daten im lokalen Browser-Speicher. Keine Netzwerkaufrufe, kein Konto, keine Telemetrie, keine Werbung.
-• Intelligent archivieren. Ein Klick gruppiert die Tabs des aktuellen Fensters automatisch nach Kategorien (Entwicklung, Design, Mail, KI, Cloud …) in mehrere Bereiche.
-• Drag-and-Drop. Tabs zwischen Bereichen ziehen, aktuelle Tabs zu einem Bereich hinzufügen oder ganze Bereiche per Griff auf einen anderen zum Zusammenführen ziehen.
-• Mehrsprachig. Vereinfachtes Chinesisch, Traditionelles Chinesisch, Englisch, Japanisch, Deutsch.
+✨ SOFORTIGES WECHSELN
+Inaktive Bereiche bleiben in einem versteckten Chrome-Fenster geladen. Beim Wechseln werden Tabs zwischen Vault und sichtbarem Fenster verschoben — kein Neuladen, kein Warten, keine verlorene Scrollposition.
 
-**Fünf Schritte**
-1. Klicke das SpaceTab-Symbol → Manager öffnet sich (an die Tab-Leiste angepinnt).
-2. Klicke „Aktuelles Fenster archivieren" für deinen ersten Bereich.
-3. Klicke „Intelligent archivieren" für automatisch kategorisierte Bereiche.
-4. Klicke „Wechseln" auf einem Bereich, um seine Tabs sofort zurückzubringen.
-5. Ziehe Tabs und Bereiche zur Reorganisation.
+🧠 INTELLIGENT ARCHIVIEREN
+Ein Klick gruppiert die Tabs des aktuellen Fensters nach Domain in Vorschlagsbereiche. Prüfen, umbenennen, bestätigen.
 
-**Berechtigungen**
-• tabs — Tab-URLs/Titel lesen und Tabs für das Vault zwischen Fenstern verschieben.
-• storage — Bereiche lokal speichern.
+🎨 CHROME TAB-GRUPPEN WERDEN ERHALTEN
+Gruppenfarbe und -titel überleben Archivierung und Wechsel. Deine visuelle Organisation bleibt.
 
-Mehr nicht. Keine Hostberechtigungen, keine Skript-Injektion, kein breiter Zugriff.
+⌨️ BEFEHLSPALETTE (⌘K)
+Bereiche wechseln, Theme umschalten, archivieren, Import/Export — jede Aktion einen Tastendruck entfernt.
 
-**Sicherung & Übertragung**
-Einstellungen → JSON exportieren als Backup; auf anderem Gerät JSON importieren für manuelle Synchronisation.
+✅ POWER-FEATURES
+• Tabs mehrfach auswählen (⌘/Strg+Klick, Umschalt+Klick für Bereiche) — gesammelt öffnen, verschieben, löschen
+• Inaktive Tabs schlafen legen, um RAM zu sparen (einzeln oder alle)
+• Bereiche anpinnen; emoji + Notiz pro Bereich; manuell per Drag sortieren
+• Tabs zwischen Bereichen ziehen, Bereiche zusammenführen
+• Globale Suche + Suche innerhalb eines Bereichs
+• 8-Sekunden-„Rückgängig" nach jedem Wechsel
+• Helle, dunkle und systemgeführte Themes
+• 5 Sprachen: English, 简体中文, 繁體中文, 日本語, Deutsch
+• JSON Export/Import — deine Daten gehören dir
 
-Open Source. Datenschutzrichtlinie und Quellcode-Links auf der Detailseite.
+🔒 DATENSCHUTZ ZUERST
+SpaceTab sammelt, sendet oder verkauft nichts. Keine Telemetrie, keine Analysen, keine Server. Deine Bereiche leben in chrome.storage.local auf diesem Gerät.
+
+🆓 OPEN SOURCE
+MIT-lizenziert. Code prüfen, Issues melden, Features beitragen:
+https://github.com/tashuo/spacetab
+```
+
+---
+
+## Permission justifications
+
+Paste each into the corresponding field on the Privacy practices tab.
+
+### `tabs`
+> Required to read URLs and titles of tabs in the current window so they can be archived into a space, and to move tabs between the visible window and the hidden vault window when the user switches spaces or moves tabs across spaces. Also used to discard inactive tabs at the user's request.
+
+### `storage`
+> Required to persist the user's spaces (names, tabs, emoji, notes, pin/order metadata) across browser restarts. All data is kept in chrome.storage.local on the user's device. Nothing is transmitted off-device.
+
+### `tabGroups`
+> Required to read the color and title of Chrome native tab groups when archiving a window into a space, and to recreate those groups in the visible window when the user switches back. Without this permission the visual grouping would be lost on archive.
+
+### Host permissions
+> None requested.
+
+### Remote code
+> None. SpaceTab is a static page bundle plus a service worker; no JavaScript is fetched at runtime.
+
+---
+
+## New-tab-page override justification
+
+Chrome reviewers will flag this. Paste this verbatim:
+
+> The new-tab override is opt-in and disabled by default. On first install, Cmd/Ctrl+T opens a minimal placeholder page with one button labeled "Enable here" — only after the user explicitly clicks that button does the manager UI take over the new-tab page. The override can be toggled off at any time from the command palette. The feature serves SpaceTab's primary purpose (organising and switching tab spaces) by giving users a quick entry point to the manager.
+
+---
+
+## Other dashboard fields
+
+| Field | Value |
+|---|---|
+| Support email | (your email) |
+| Website | `https://github.com/tashuo/spacetab` |
+| Issues / support | `https://github.com/tashuo/spacetab/issues` |
+| Pricing | Free |
+| Distribution | Public |
+| Regions | All regions |
+
+---
+
+## Screenshot order (5 max, 1280×800 each)
+
+1. `01-hero.png` — Engineering space expanded with tab groups visible
+2. `02-palette.png` — ⌘K command palette overlay (Actions / Switch to Space)
+3. `03-tab-groups.png` — Chrome tab strip showing colored groups + manager mirror
+4. `04-multiselect.png` — Multi-select batch action bar
+5. `05-dark.png` — Dark theme, Design Inspiration expanded
+
+---
+
+## Submission checklist
+
+- [x] Repo public on GitHub (`tashuo/spacetab`)
+- [x] PRIVACY.md returns 200 from incognito
+- [x] zip rebuilt: `pnpm wxt zip` → `.output/spacetab-1.0.0-chrome.zip` (137 KB)
+- [ ] All 5 screenshots prepared at 1280×800 and named `01-…05-`
+- [ ] Short description copied (one of the 5 locales)
+- [ ] Detailed description copied (matching locale)
+- [ ] Permission justifications copied (3 entries)
+- [ ] New-tab-override justification copied
+- [ ] Privacy policy URL pasted
+- [ ] Single-purpose statement pasted
+- [ ] Category: Productivity
+- [ ] Submit for review
