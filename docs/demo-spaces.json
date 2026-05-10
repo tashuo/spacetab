@@ -1,7 +1,7 @@
 {
   "format": "spacetab-export",
   "formatVersion": 1,
-  "exportedAt": 1747008000000,
+  "exportedAt": 1778439384370,
   "app": "SpaceTab",
   "db": {
     "version": 1,
@@ -12,8 +12,8 @@
         "emoji": "💻",
         "note": "Frontend project + tooling. Cmd-click to multi-select, Shift-click for ranges.",
         "pinned": true,
-        "createdAt": 1746604800000,
-        "updatedAt": 1747008000000,
+        "createdAt": 1778093384370,
+        "updatedAt": 1778438784370,
         "groups": [
           { "key": "g1", "title": "Frontend", "color": "blue" },
           { "key": "g2", "title": "Docs", "color": "yellow" }
@@ -36,8 +36,8 @@
         "name": "Design Inspiration",
         "emoji": "🎨",
         "note": "Daily inspiration & color palettes",
-        "createdAt": 1746604800000,
-        "updatedAt": 1746921600000,
+        "createdAt": 1777488584370,
+        "updatedAt": 1778352984370,
         "tabs": [
           { "url": "https://dribbble.com/", "title": "Dribbble — Discover the World's Top Designers", "favIconUrl": "https://www.google.com/s2/favicons?domain=dribbble.com&sz=64" },
           { "url": "https://www.behance.net/", "title": "Behance — Best of design, illustration, photography", "favIconUrl": "https://www.google.com/s2/favicons?domain=behance.net&sz=64" },
@@ -53,8 +53,8 @@
         "name": "AI Tools",
         "emoji": "🤖",
         "note": "Daily AI assistants",
-        "createdAt": 1746518400000,
-        "updatedAt": 1746835200000,
+        "createdAt": 1776661784370,
+        "updatedAt": 1778266584370,
         "tabs": [
           { "url": "https://claude.ai/", "title": "Claude", "favIconUrl": "https://www.google.com/s2/favicons?domain=claude.ai&sz=64" },
           { "url": "https://chatgpt.com/", "title": "ChatGPT", "favIconUrl": "https://www.google.com/s2/favicons?domain=chatgpt.com&sz=64" },
@@ -70,8 +70,8 @@
         "name": "Reading",
         "emoji": "📚",
         "note": "Long-reads & industry news",
-        "createdAt": 1746432000000,
-        "updatedAt": 1746748800000,
+        "createdAt": 1775847384370,
+        "updatedAt": 1778093384370,
         "tabs": [
           { "url": "https://news.ycombinator.com/", "title": "Hacker News", "favIconUrl": "https://www.google.com/s2/favicons?domain=news.ycombinator.com&sz=64" },
           { "url": "https://en.wikipedia.org/wiki/Tab_(GUI)", "title": "Tab (GUI) — Wikipedia", "favIconUrl": "https://www.google.com/s2/favicons?domain=en.wikipedia.org&sz=64" },
@@ -87,8 +87,8 @@
         "name": "Shopping",
         "emoji": "🛒",
         "note": "Wishlist & gift ideas",
-        "createdAt": 1746345600000,
-        "updatedAt": 1746576000000,
+        "createdAt": 1775247384370,
+        "updatedAt": 1777834584370,
         "tabs": [
           { "url": "https://www.apple.com/", "title": "Apple", "favIconUrl": "https://www.google.com/s2/favicons?domain=apple.com&sz=64" },
           { "url": "https://www.amazon.com/", "title": "Amazon.com", "favIconUrl": "https://www.google.com/s2/favicons?domain=amazon.com&sz=64" },
