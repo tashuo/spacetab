@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SpaceTab Vault</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: #e2e8f0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px;
+      }
+      .card {
+        max-width: 520px;
+        text-align: center;
+      }
+      .logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 18px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: #fff;
+        font-weight: 700;
+        font-size: 16px;
+        letter-spacing: 0.3px;
+        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+      }
+      h1 {
+        margin: 24px 0 12px;
+        font-size: 20px;
+        font-weight: 600;
+        color: #f1f5f9;
+      }
+      p {
+        margin: 8px 0;
+        line-height: 1.6;
+        color: #94a3b8;
+        font-size: 14px;
+      }
+      .warning {
+        margin-top: 20px;
+        padding: 12px 16px;
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        border-radius: 8px;
+        color: #fbbf24;
+        font-size: 13px;
+      }
+      .hint {
+        margin-top: 16px;
+        font-size: 12px;
+        color: #64748b;
+      }
+      kbd {
+        display: inline-block;
+        padding: 2px 6px;
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 4px;
+        font-family: ui-monospace, SFMono-Regular, monospace;
+        font-size: 11px;
+        color: #cbd5e1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="logo">⚡ SpaceTab Vault</div>
+      <h1>This window is managed by SpaceTab</h1>
+      <p>It holds tabs from inactive spaces so switching between them is instant — they stay loaded in the background instead of being recreated each time.</p>
+      <div class="warning">⚠ Don't close this window manually. SpaceTab will keep it for you.</div>
+      <p class="hint">Open the SpaceTab manager with <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> (or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>).</p>
+    </div>
+  </body>
+</html>

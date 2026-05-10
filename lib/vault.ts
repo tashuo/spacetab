@@ -37,12 +37,27 @@ export async function ensureVaultWindow(): Promise<number> {
       // window was closed externally; fall through to recreate
     }
   }
+  // 用扩展自带的 vault-marker.html 当锚点 tab:
+  // 1) 让 dock / 任务栏的窗口标题写明这是 SpaceTab vault,用户一眼能认出来
+  // 2) 钉住这个 tab,空 vault 时也不会被 Chrome 自动关掉
+  const markerUrl = chrome.runtime.getURL('vault-marker.html')
   const win = await chrome.windows.create({
     state: 'minimized',
     focused: false,
     type: 'normal',
+    url: markerUrl,
   })
   if (!win || typeof win.id !== 'number') throw new Error('Vault create returned no id')
+  // chrome.windows.create 的回调里 tabs 可能还没填充,显式查一下窗口里的标签
+  try {
+    const winTabs = await chrome.tabs.query({ windowId: win.id })
+    const markerTab = winTabs.find((t) => t.url?.startsWith('chrome-extension://')) ?? winTabs[0]
+    if (markerTab && typeof markerTab.id === 'number') {
+      await chrome.tabs.update(markerTab.id, { pinned: true })
+    }
+  } catch {
+    // 钉失败不致命,只是窗口名不会显示
+  }
   await writeSessionState({
     vaultWindowId: win.id,
     spaceIdToTabIds: {},
