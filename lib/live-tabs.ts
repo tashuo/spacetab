@@ -14,6 +14,7 @@ export interface LiveTab {
   pinned: boolean
   active: boolean
   restorable: boolean // false for chrome://, edge://, about:, etc.
+  discarded: boolean // 已被 chrome.tabs.discard 释放内存,但仍在标签栏可见
 }
 
 function chromTabToLiveTab(t: chrome.tabs.Tab): LiveTab | null {
@@ -26,6 +27,7 @@ function chromTabToLiveTab(t: chrome.tabs.Tab): LiveTab | null {
     pinned: t.pinned ?? false,
     active: t.active ?? false,
     restorable: isRestorable(url),
+    discarded: t.discarded ?? false,
   }
   if (t.favIconUrl) entry.favIconUrl = t.favIconUrl
   return entry
@@ -90,4 +92,39 @@ export async function activateTab(tabId: number): Promise<void> {
 
 export async function closeTab(tabId: number): Promise<void> {
   await chrome.tabs.remove(tabId)
+}
+
+/**
+ * 让标签进入休眠(`chrome.tabs.discard`):释放 RAM,但保留在标签栏。
+ * Chrome 不会休眠 active / 正在播放音视频 / 从未访问过的 tab,这些情况会拒绝。
+ */
+export async function discardTab(tabId: number): Promise<void> {
+  try {
+    await chrome.tabs.discard(tabId)
+  } catch {
+    // 静默失败:某些 tab(如正在播放音频、未访问过的)Chrome 拒绝休眠
+  }
+}
+
+/** 批量休眠当前窗口除 active 外的可休眠 tab。返回成功休眠的数量。 */
+export async function discardInactiveInManagerWindow(): Promise<number> {
+  const info = await getManagerInfo()
+  if (!info) return 0
+  const { managerId, windowId } = info
+  const all = await chrome.tabs.query({ windowId })
+  let count = 0
+  for (const t of all) {
+    if (typeof t.id !== 'number') continue
+    if (t.id === managerId) continue
+    if (t.active) continue
+    if (t.discarded) continue
+    if (!isRestorable(t.url)) continue
+    try {
+      await chrome.tabs.discard(t.id)
+      count += 1
+    } catch {
+      // 跳过被 Chrome 拒绝的
+    }
+  }
+  return count
 }

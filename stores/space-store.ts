@@ -1,14 +1,24 @@
 import { create } from 'zustand'
-import { EMPTY_DB, type Database, type Tab } from '@/lib/schema'
+import { EMPTY_DB, type Database, type Tab, type TabGroup } from '@/lib/schema'
 import { readDatabase, writeDatabase } from '@/lib/storage'
 import * as space from '@/lib/space'
 import { purgeVaultedTabsForSpace, mergeSessionTags } from '@/lib/vault'
 
 export type ToastKind = 'info' | 'error'
+export interface ToastAction {
+  label: string
+  perform: () => void
+}
 export interface Toast {
   id: number
   kind: ToastKind
   text: string
+  action?: ToastAction
+}
+export interface ToastOptions {
+  action?: ToastAction
+  /** 自定义自动消失毫秒数,默认 4000 */
+  ttl?: number
 }
 
 interface State {
@@ -17,16 +27,23 @@ interface State {
   toasts: Toast[]
 
   load: () => Promise<void>
-  archive: (spaceId: string, tabs: Tab[]) => Promise<boolean>
-  archiveNew: (name: string, tabs: Tab[]) => Promise<string | null>
+  archive: (spaceId: string, tabs: Tab[], groups?: TabGroup[]) => Promise<boolean>
+  archiveNew: (name: string, tabs: Tab[], groups?: TabGroup[]) => Promise<string | null>
   rename: (id: string, name: string) => Promise<void>
   remove: (id: string) => Promise<void>
   removeTab: (spaceId: string, url: string) => Promise<boolean>
   moveTab: (fromId: string, toId: string, url: string) => Promise<boolean>
   merge: (fromId: string, toId: string) => Promise<boolean>
   duplicate: (sourceId: string, newName: string) => Promise<string | null>
+  setEmoji: (id: string, emoji: string | undefined) => Promise<void>
+  setNote: (id: string, note: string | undefined) => Promise<void>
+  togglePinned: (id: string) => Promise<void>
+  reorder: (orderedIds: string[]) => Promise<void>
+  reorderTabs: (spaceId: string, orderedUrls: string[]) => Promise<void>
+  removeTabs: (spaceId: string, urls: string[]) => Promise<void>
+  moveTabsBatch: (fromId: string, toId: string, urls: string[]) => Promise<void>
   importDb: (next: Database) => Promise<boolean>
-  pushToast: (kind: ToastKind, text: string) => void
+  pushToast: (kind: ToastKind, text: string, options?: ToastOptions) => void
   dismissToast: (id: number) => void
 }
 
@@ -49,13 +66,14 @@ export const useSpaceStore = create<State>((set, get) => ({
     }
   },
 
-  archive: async (id, tabs) => {
+  archive: async (id, tabs, groups) => {
     const before = get().db
     if (!before.spaces.some((s) => s.id === id)) {
       get().pushToast('error', '空间已不存在')
       return false
     }
-    const next = space.archiveToSpace(before, id, tabs, Date.now())
+    const opts = groups && groups.length > 0 ? { incomingGroups: groups } : undefined
+    const next = space.archiveToSpace(before, id, tabs, Date.now(), opts)
     set({ db: next })
     const result = await writeDatabase(next)
     if (!result.ok) {
@@ -66,10 +84,11 @@ export const useSpaceStore = create<State>((set, get) => ({
     return true
   },
 
-  archiveNew: async (name, tabs) => {
+  archiveNew: async (name, tabs, groups) => {
     const before = get().db
     const id = crypto.randomUUID()
-    const next = space.createSpace(before, name, tabs, id, Date.now())
+    const opts = groups && groups.length > 0 ? { incomingGroups: groups } : undefined
+    const next = space.createSpace(before, name, tabs, id, Date.now(), opts)
     set({ db: next })
     const result = await writeDatabase(next)
     if (!result.ok) {
@@ -158,6 +177,92 @@ export const useSpaceStore = create<State>((set, get) => ({
     return true
   },
 
+  setEmoji: async (id, emoji) => {
+    const before = get().db
+    const next = space.setSpaceEmoji(before, id, emoji, Date.now())
+    if (next === before) return
+    set({ db: next })
+    const result = await writeDatabase(next)
+    if (!result.ok) {
+      set({ db: before })
+      get().pushToast('error', '存储写入失败,已回滚')
+    }
+  },
+
+  setNote: async (id, note) => {
+    const before = get().db
+    const next = space.setSpaceNote(before, id, note, Date.now())
+    if (next === before) return
+    set({ db: next })
+    const result = await writeDatabase(next)
+    if (!result.ok) {
+      set({ db: before })
+      get().pushToast('error', '存储写入失败,已回滚')
+    }
+  },
+
+  togglePinned: async (id) => {
+    const before = get().db
+    const target = before.spaces.find((s) => s.id === id)
+    if (!target) return
+    const next = space.setSpacePinned(before, id, !(target.pinned ?? false), Date.now())
+    if (next === before) return
+    set({ db: next })
+    const result = await writeDatabase(next)
+    if (!result.ok) {
+      set({ db: before })
+      get().pushToast('error', '存储写入失败,已回滚')
+    }
+  },
+
+  reorder: async (orderedIds) => {
+    const before = get().db
+    const next = space.reorderSpaces(before, orderedIds, Date.now())
+    if (next === before) return
+    set({ db: next })
+    const result = await writeDatabase(next)
+    if (!result.ok) {
+      set({ db: before })
+      get().pushToast('error', '存储写入失败,已回滚')
+    }
+  },
+
+  reorderTabs: async (spaceId, orderedUrls) => {
+    const before = get().db
+    const next = space.reorderTabsInSpace(before, spaceId, orderedUrls, Date.now())
+    if (next === before) return
+    set({ db: next })
+    const result = await writeDatabase(next)
+    if (!result.ok) {
+      set({ db: before })
+      get().pushToast('error', '存储写入失败,已回滚')
+    }
+  },
+
+  removeTabs: async (spaceId, urls) => {
+    const before = get().db
+    const next = space.removeTabsFromSpace(before, spaceId, urls, Date.now())
+    if (next === before) return
+    set({ db: next })
+    const result = await writeDatabase(next)
+    if (!result.ok) {
+      set({ db: before })
+      get().pushToast('error', '存储写入失败,已回滚')
+    }
+  },
+
+  moveTabsBatch: async (fromId, toId, urls) => {
+    const before = get().db
+    const next = space.moveTabs(before, fromId, toId, urls, Date.now())
+    if (next === before) return
+    set({ db: next })
+    const result = await writeDatabase(next)
+    if (!result.ok) {
+      set({ db: before })
+      get().pushToast('error', '存储写入失败,已回滚')
+    }
+  },
+
   importDb: async (next) => {
     const before = get().db
     set({ db: next })
@@ -189,10 +294,13 @@ export const useSpaceStore = create<State>((set, get) => ({
     return newId
   },
 
-  pushToast: (kind, text) => {
+  pushToast: (kind, text, options) => {
     const id = ++toastSeq
-    set((s) => ({ toasts: [...s.toasts, { id, kind, text }] }))
-    setTimeout(() => get().dismissToast(id), 4000)
+    const toast: Toast = options?.action
+      ? { id, kind, text, action: options.action }
+      : { id, kind, text }
+    set((s) => ({ toasts: [...s.toasts, toast] }))
+    setTimeout(() => get().dismissToast(id), options?.ttl ?? 4000)
   },
 
   dismissToast: (id) => {

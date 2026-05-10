@@ -5,7 +5,8 @@ import {
   untagTabIdInState,
   dropSpaceFromState,
 } from './session-state'
-import type { Tab } from './schema'
+import type { Tab, TabGroup } from './schema'
+import { snapshotGroupsForTabs, restoreGroupsForTabs } from './tab-groups'
 
 const SKIP_URL_PREFIXES = ['chrome://', 'chrome-extension://', 'edge://', 'about:', 'view-source:']
 
@@ -85,24 +86,35 @@ export async function snapshotCurrentWindow(): Promise<Tab[]> {
 
 export async function archiveCurrentWindowToSpace(
   spaceId: string,
-): Promise<{ archived: Tab[]; closedNonRestorable: number }> {
+): Promise<{ archived: Tab[]; groups: TabGroup[]; closedNonRestorable: number }> {
   const focusedId = await focusedWindowId()
   const visible = await chrome.tabs.query({ windowId: focusedId, pinned: false })
 
-  const archived: Tab[] = []
   const tabIdsToTag: number[] = []
+  // 先收集要归档的 chrome tabIds(只收符合条件的)
+  const accepted: chrome.tabs.Tab[] = []
   for (const t of visible) {
     if (isSelfExtension(t.url)) continue
     if (typeof t.id !== 'number') continue
-    if (!canRestore(t.url)) continue // chrome:// 等不归档,但也不关
+    if (!canRestore(t.url)) continue
+    accepted.push(t)
+    tabIdsToTag.push(t.id)
+  }
+
+  // 抓分组快照
+  const { tabIdToKey, groups } = await snapshotGroupsForTabs(tabIdsToTag)
+
+  const archived: Tab[] = accepted.map((t) => {
     const url = t.url!
-    archived.push({
+    const tabIdNum = t.id as number
+    const key = tabIdToKey.get(tabIdNum)
+    const base: Tab = {
       url,
       title: t.title && t.title.length > 0 ? t.title : url,
       ...(t.favIconUrl ? { favIconUrl: t.favIconUrl } : {}),
-    })
-    tabIdsToTag.push(t.id)
-  }
+    }
+    return key ? { ...base, groupKey: key } : base
+  })
 
   // 仅给当前窗口的标签打标,不搬走、不关闭——保持用户视野。
   // 下次切换到别的空间时,switchToSpace 会把这些 tagged 标签自然地搬入 vault。
@@ -111,17 +123,19 @@ export async function archiveCurrentWindowToSpace(
     await writeSessionState(tagTabIdsForSpace(state, spaceId, tabIdsToTag))
   }
 
-  return { archived, closedNonRestorable: 0 }
+  return { archived, groups, closedNonRestorable: 0 }
 }
 
 export async function switchToSpace(
   toSpaceId: string,
   toSpaceTabs: Tab[],
-): Promise<{ failed: Tab[] }> {
+  toSpaceGroups: TabGroup[] = [],
+): Promise<{ failed: Tab[]; fromSpaceId: string | null }> {
   const focusedId = await focusedWindowId()
   const visibleAll = await chrome.tabs.query({ windowId: focusedId, pinned: false })
 
   const state = await readSessionState()
+  const fromSpaceId = state.currentSpaceId ?? null
   const allTaggedIds = new Set<number>()
   for (const ids of Object.values(state.spaceIdToTabIds)) {
     for (const id of ids) allTaggedIds.add(id)
@@ -169,11 +183,27 @@ export async function switchToSpace(
 
   // For URLs not represented by an alive vaulted tab, create them via discarded-create
   const liveUrls = new Set<string>()
+  // url → groupKey,从 space 的 tabs 里抽出来,用于把 chrome tabId 归到分组桶
+  const urlToKey = new Map<string, string>()
+  for (const t of toSpaceTabs) {
+    if (t.groupKey) urlToKey.set(t.url, t.groupKey)
+  }
+  const tabIdsByKey = new Map<string, number[]>()
+  const pushBucket = (key: string, id: number) => {
+    const arr = tabIdsByKey.get(key)
+    if (arr) arr.push(id)
+    else tabIdsByKey.set(key, [id])
+  }
+
   if (aliveKnownIds.length > 0) {
     for (const id of aliveKnownIds) {
       try {
         const tab = await chrome.tabs.get(id)
-        if (tab.url) liveUrls.add(tab.url)
+        if (tab.url) {
+          liveUrls.add(tab.url)
+          const k = urlToKey.get(tab.url)
+          if (k) pushBucket(k, id)
+        }
       } catch {
         // ignore
       }
@@ -194,18 +224,32 @@ export async function switchToSpace(
       })
       if (typeof created.id === 'number') {
         newlyCreatedIds.push(created.id)
+        if (tab.groupKey) pushBucket(tab.groupKey, created.id)
       }
     } catch {
       failed.push(tab)
     }
   }
 
-  if (newlyCreatedIds.length > 0) {
-    const fresh = await readSessionState()
-    await writeSessionState(tagTabIdsForSpace(fresh, toSpaceId, newlyCreatedIds))
+  // 重建 chrome 标签组(title + 颜色)
+  if (tabIdsByKey.size > 0 && toSpaceGroups.length > 0) {
+    await restoreGroupsForTabs(focusedId, tabIdsByKey, toSpaceGroups)
   }
 
-  return { failed }
+  if (newlyCreatedIds.length > 0) {
+    const fresh = await readSessionState()
+    await writeSessionState({
+      ...tagTabIdsForSpace(fresh, toSpaceId, newlyCreatedIds),
+      currentSpaceId: toSpaceId,
+    })
+  } else {
+    const fresh = await readSessionState()
+    if (fresh.currentSpaceId !== toSpaceId) {
+      await writeSessionState({ ...fresh, currentSpaceId: toSpaceId })
+    }
+  }
+
+  return { failed, fromSpaceId }
 }
 
 // 删除空间时调用:仅解除 session 里对这些 tabId 的归属关系。

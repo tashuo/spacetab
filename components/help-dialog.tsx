@@ -111,6 +111,25 @@ export function HelpDialog({ onClose, isWelcome = false }: Props) {
 
           <section>
             <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+              {t('helpTipsHeading')}
+            </h3>
+            <ul className="space-y-1.5 list-disc pl-5 text-slate-600 dark:text-slate-300">
+              {([
+                'helpTipPalette',
+                'helpTipMultiSelect',
+                'helpTipReorder',
+                'helpTipDiscard',
+                'helpTipUndo',
+                'helpTipNewtab',
+                'helpTipGroups',
+              ] as const).map((k) => (
+                <li key={k}>{t(k)}</li>
+              ))}
+            </ul>
+          </section>
+
+          <section>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
               {t('helpPrivacyHeading')}
             </h3>
             <p className="text-slate-600 dark:text-slate-300">{t('helpPrivacy')}</p>

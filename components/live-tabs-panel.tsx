@@ -1,10 +1,10 @@
 import { useLiveTabs } from '@/hooks/use-live-tabs'
-import { activateTab, closeTab, type LiveTab } from '@/lib/live-tabs'
+import { activateTab, closeTab, discardTab, type LiveTab } from '@/lib/live-tabs'
 import type { Space } from '@/lib/schema'
 import { useT } from '@/lib/i18n'
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Pin, X, ArrowRight, Sparkle } from './icons'
+import { Pin, X, ArrowRight, Sparkle, Moon } from './icons'
 import { ArchiveTrigger } from './archive-trigger'
 
 interface PanelProps {
@@ -133,22 +133,39 @@ function LiveTabRow({ tab, spaces, onMoveToSpace }: RowProps) {
       }
       className={`group flex items-center gap-2 px-3 py-1.5 text-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors ${
         tab.restorable ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400 dark:text-slate-500'
-      } ${tab.active ? 'bg-slate-50 dark:bg-slate-800 border-l-2 border-teal-600 -ml-[2px] pl-[14px]' : ''}`}
+      } ${tab.discarded ? 'opacity-60' : ''} ${tab.active ? 'bg-slate-50 dark:bg-slate-800 border-l-2 border-teal-600 -ml-[2px] pl-[14px]' : ''}`}
       onClick={() => activateTab(tab.id)}
+      title={tab.discarded ? `${tab.title || tab.url}\n💤 ${t('discardedLabel')}` : tab.title || tab.url}
     >
       {showFavicon ? (
         <img
           src={tab.favIconUrl}
           alt=""
           onError={() => setFailed(true)}
-          className="w-4 h-4 flex-shrink-0 rounded-sm"
+          className={`w-4 h-4 flex-shrink-0 rounded-sm ${tab.discarded ? 'grayscale' : ''}`}
         />
       ) : (
         <span className="w-4 h-4 flex-shrink-0 rounded-sm bg-slate-200" />
       )}
       {tab.pinned && <Pin className="w-3 h-3 text-slate-400 dark:text-slate-500 flex-shrink-0" />}
+      {tab.discarded && (
+        <Moon className="w-3 h-3 text-indigo-400 dark:text-indigo-300 flex-shrink-0" aria-label="discarded" />
+      )}
       <span className="flex-1 truncate text-[13px]">{tab.title || tab.url}</span>
       <div className="flex items-center gap-0.5">
+        {!tab.discarded && tab.restorable && !tab.active && !tab.pinned && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              void discardTab(tab.id)
+            }}
+            className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-opacity duration-150"
+            title={t('discardTab')}
+            aria-label={t('discardTab')}
+          >
+            <Moon className="w-3 h-3" />
+          </button>
+        )}
         {canMove && (
           <button
             ref={moveBtnRef}

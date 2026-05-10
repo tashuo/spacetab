@@ -25,7 +25,10 @@ import {
 } from '@/lib/export-import'
 import { useT } from '@/lib/i18n'
 import { useTheme, type ThemePref } from '@/lib/theme'
+import { useUseAsNewtab } from '@/lib/settings'
+import { discardInactiveInManagerWindow } from '@/lib/live-tabs'
 import { filterDatabase } from '@/lib/search'
+import { sortedForDisplay } from '@/lib/space'
 import type { Tab, Database } from '@/lib/schema'
 
 export default function App() {
@@ -33,12 +36,15 @@ export default function App() {
     db, loaded, toasts,
     load, archive, archiveNew, rename, remove, duplicate,
     removeTab, moveTab, merge, importDb,
+    setEmoji, setNote, togglePinned, reorder, reorderTabs,
+    removeTabs, moveTabsBatch,
     dismissToast, pushToast,
   } = useSpaceStore()
 
   const { t } = useT()
   // 在根上挂上主题切换的副作用(读 storage、监听系统)
   const { pref: themePref, setPref: setThemePref } = useTheme()
+  const { enabled: newtabEnabled, setEnabled: setNewtabEnabled } = useUseAsNewtab()
 
   const [smartDialog, setSmartDialog] = useState<{
     clusters: ReturnType<typeof clusterTabs>
@@ -60,7 +66,7 @@ export default function App() {
   const searchInputRef = useRef<HTMLInputElement | null>(null)
   const filteredDb = useMemo(() => filterDatabase(db, query), [db, query])
   const sortedSpaces = useMemo(
-    () => [...filteredDb.spaces].sort((a, b) => b.updatedAt - a.updatedAt),
+    () => sortedForDisplay(filteredDb.spaces),
     [filteredDb.spaces],
   )
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null)
@@ -185,12 +191,12 @@ export default function App() {
 
   const archiveExisting = async (spaceId: string) => {
     try {
-      const { archived } = await archiveCurrentWindowToSpace(spaceId)
+      const { archived, groups } = await archiveCurrentWindowToSpace(spaceId)
       if (archived.length === 0) {
         pushToast('info', t('toastWindowEmpty'))
         return
       }
-      const ok = await archive(spaceId, archived)
+      const ok = await archive(spaceId, archived, groups)
       if (!ok) return
       const name = db.spaces.find((s) => s.id === spaceId)?.name ?? ''
       pushToast('info', t('toastArchived', { n: archived.length, name }))
@@ -206,20 +212,20 @@ export default function App() {
       // 自动合并:同名空间已存在则追加进去,toast 走"已归档";否则新建
       const existing = db.spaces.find((s) => s.name === name)
       if (existing) {
-        const { archived } = await archiveCurrentWindowToSpace(existing.id)
+        const { archived, groups } = await archiveCurrentWindowToSpace(existing.id)
         if (archived.length === 0) {
           pushToast('info', t('toastWindowEmpty'))
           return
         }
-        const ok = await archive(existing.id, archived)
+        const ok = await archive(existing.id, archived, groups)
         if (ok) pushToast('info', t('toastArchived', { n: archived.length, name }))
         return
       }
       const id = await archiveNew(name, [])
       if (!id) return
-      const { archived } = await archiveCurrentWindowToSpace(id)
+      const { archived, groups } = await archiveCurrentWindowToSpace(id)
       if (archived.length > 0) {
-        const ok = await archive(id, archived)
+        const ok = await archive(id, archived, groups)
         if (!ok) return
       }
       pushToast('info', t('toastArchivedNew', { name, n: archived.length }))
@@ -335,22 +341,51 @@ export default function App() {
     }
   }
 
+  const handleReorder = (fromId: string, toId: string, position: 'before' | 'after') => {
+    if (fromId === toId) return
+    // 用整库的当前显示顺序来计算新顺序,避免被搜索过滤截断
+    const allOrdered = sortedForDisplay(db.spaces).map((s) => s.id)
+    const without = allOrdered.filter((id) => id !== fromId)
+    const toIdx = without.indexOf(toId)
+    if (toIdx === -1) return
+    const insertAt = position === 'before' ? toIdx : toIdx + 1
+    const next = [...without.slice(0, insertAt), fromId, ...without.slice(insertAt)]
+    void reorder(next)
+  }
+
   const cycleTheme = () => {
     const order: ThemePref[] = ['system', 'light', 'dark']
     const i = order.indexOf(themePref)
     setThemePref(order[(i + 1) % order.length]!)
   }
 
-  const switchTo = async (id: string) => {
+  const switchTo = async (id: string, opts?: { silent?: boolean }) => {
     const target = db.spaces.find((s) => s.id === id)
     if (!target) {
       pushToast('error', t('toastSpaceMissing'))
       return
     }
     try {
-      const result = await switchToSpace(id, target.tabs)
+      const result = await switchToSpace(id, target.tabs, target.groups ?? [])
       if (result.failed.length > 0) {
         pushToast('error', t('toastFailedTabs', { n: result.failed.length }))
+        return
+      }
+      if (opts?.silent) return
+      // 上一次有空间 + 不是切到自己:给 undo 入口
+      const fromId = result.fromSpaceId
+      const fromSpace = fromId ? db.spaces.find((s) => s.id === fromId) : null
+      if (fromSpace && fromSpace.id !== id) {
+        pushToast('info', t('toastSwitched', { name: target.name }), {
+          action: {
+            label: t('undo'),
+            perform: () => {
+              void switchTo(fromSpace.id, { silent: true })
+              pushToast('info', t('toastSwitched', { name: fromSpace.name }))
+            },
+          },
+          ttl: 8000,
+        })
       } else {
         pushToast('info', t('toastSwitched', { name: target.name }))
       }
@@ -391,6 +426,26 @@ export default function App() {
       group: 'action',
       label: t('cmdImportJson'),
       perform: () => void handleImport(),
+    })
+    list.push({
+      id: 'toggle-newtab',
+      group: 'action',
+      label: t('cmdToggleNewtab', { state: newtabEnabled ? t('newtabStateOn') : t('newtabStateOff') }),
+      perform: () => {
+        const next = !newtabEnabled
+        setNewtabEnabled(next)
+        pushToast('info', next ? t('toastNewtabEnabled') : t('toastNewtabDisabled'))
+      },
+    })
+    list.push({
+      id: 'discard-inactive',
+      group: 'action',
+      label: t('cmdDiscardInactive'),
+      perform: () => {
+        void discardInactiveInManagerWindow().then((n) => {
+          pushToast('info', n > 0 ? t('toastDiscarded', { n }) : t('toastDiscardedNone'))
+        })
+      },
     })
     list.push({
       id: 'open-help',
@@ -459,8 +514,15 @@ export default function App() {
                 onTabOpen={openTabUrl}
                 onTabRemove={removeTab}
                 onTabMove={moveTab}
+                onTabReorder={reorderTabs}
+                onTabsRemove={removeTabs}
+                onTabsMove={moveTabsBatch}
                 onLiveTabDrop={handleLiveTabMove}
                 onMerge={handleMerge}
+                onReorder={handleReorder}
+                onTogglePinned={togglePinned}
+                onSetEmoji={(id, emoji) => setEmoji(id, emoji?.trim() ? emoji.trim() : undefined)}
+                onSetNote={(id, note) => setNote(id, note?.trim() ? note.trim() : undefined)}
               />
             )
           ) : (

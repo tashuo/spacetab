@@ -14,8 +14,15 @@ interface Props {
   onTabOpen: (url: string) => void
   onTabRemove: (spaceId: string, url: string) => void
   onTabMove: (fromId: string, toId: string, url: string) => void
+  onTabReorder: (spaceId: string, orderedUrls: string[]) => void
+  onTabsRemove: (spaceId: string, urls: string[]) => void
+  onTabsMove: (fromId: string, toId: string, urls: string[]) => void
   onLiveTabDrop: (tabId: number, toSpaceId: string) => void
   onMerge: (fromId: string, toId: string) => void
+  onReorder: (fromId: string, toId: string, position: 'before' | 'after') => void
+  onTogglePinned: (id: string) => void
+  onSetEmoji: (id: string, emoji: string | undefined) => void
+  onSetNote: (id: string, note: string | undefined) => void
 }
 
 export function SpaceList({
@@ -28,8 +35,15 @@ export function SpaceList({
   onTabOpen,
   onTabRemove,
   onTabMove,
+  onTabReorder,
+  onTabsRemove,
+  onTabsMove,
   onLiveTabDrop,
   onMerge,
+  onReorder,
+  onTogglePinned,
+  onSetEmoji,
+  onSetNote,
 }: Props) {
   const { t } = useT()
 
@@ -58,8 +72,15 @@ export function SpaceList({
           onTabOpen={onTabOpen}
           onTabRemove={onTabRemove}
           onTabMove={onTabMove}
+          onTabReorder={onTabReorder}
+          onTabsRemove={onTabsRemove}
+          onTabsMove={onTabsMove}
           onLiveTabDrop={onLiveTabDrop}
           onMerge={onMerge}
+          onReorder={onReorder}
+          onTogglePinned={onTogglePinned}
+          onSetEmoji={onSetEmoji}
+          onSetNote={onSetNote}
         />
       ))}
     </div>

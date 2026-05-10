@@ -1,13 +1,17 @@
 export interface SessionState {
   vaultWindowId: number | null
   spaceIdToTabIds: Record<string, number[]>
+  /** 当前可见窗口对应的空间 id;切换时更新,用于撤销切换。
+   *  可选以兼容旧测试夹具,读取时统一用 `?? null`。 */
+  currentSpaceId?: string | null
 }
 
-const KEYS = ['vaultWindowId', 'spaceIdToTabIds'] as const
+const KEYS = ['vaultWindowId', 'spaceIdToTabIds', 'currentSpaceId'] as const
 
 export const EMPTY_SESSION: SessionState = {
   vaultWindowId: null,
   spaceIdToTabIds: {},
+  currentSpaceId: null,
 }
 
 export async function readSessionState(): Promise<SessionState> {
@@ -15,12 +19,14 @@ export async function readSessionState(): Promise<SessionState> {
     const stored = await chrome.storage.session.get(KEYS as unknown as string[])
     const win = stored.vaultWindowId
     const map = stored.spaceIdToTabIds
+    const cur = stored.currentSpaceId
     return {
       vaultWindowId: typeof win === 'number' ? win : null,
       spaceIdToTabIds:
         map && typeof map === 'object' && !Array.isArray(map)
           ? (map as Record<string, number[]>)
           : {},
+      currentSpaceId: typeof cur === 'string' && cur.length > 0 ? cur : null,
     }
   } catch {
     return EMPTY_SESSION
@@ -32,6 +38,7 @@ export async function writeSessionState(s: SessionState): Promise<void> {
     await chrome.storage.session.set({
       vaultWindowId: s.vaultWindowId,
       spaceIdToTabIds: s.spaceIdToTabIds,
+      currentSpaceId: s.currentSpaceId ?? null,
     })
   } catch {
     // 写失败不阻塞主流程,下一次读会回退到 EMPTY_SESSION
